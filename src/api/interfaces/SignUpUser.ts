@@ -1,14 +1,12 @@
-interface User {
-    id: number;
+interface SignUpUser {
+    email: string;
+    password: string;
     first: string;
     last: string;
     username: string;
-    email: string;
     bio: string | null;
     followingCount: number;
     followerCount: number;
-    
 }
   
- 
-  export default User;
+export default SignUpUser;

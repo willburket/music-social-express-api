@@ -7,7 +7,8 @@ import UserController from '../controllers/UserController';
 const router: Router = express.Router();
 router.use(express.json());
 
-router.get('/users/:username', UserController.getUser);
+router.get('/user/:username', UserController.getUser);
 router.post('/auth', UserController.authorizeUser);
+router.post('/signup', UserController.createUser);
 
 export default router;
