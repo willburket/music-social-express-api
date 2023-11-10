@@ -1,9 +1,11 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import UserController from '../controllers/UserController';
 
-const router = Router();
+// const router = Router();
 
-// Define routes and map them to controller methods
+// router.use(express.json());
+const router: Router = express.Router();
+router.use(express.json());
 
 router.get('/users/:username', UserController.getUser);
 router.post('/auth', UserController.authorizeUser);

@@ -1,5 +1,6 @@
 import db from '../../config/database'; 
 import AuthUser from '../interfaces/AuthUser';
+import User from '../interfaces/User';
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -19,7 +20,7 @@ class UserService {
         }
     }
 
-    static async authorizeUser(user: AuthUser){
+    static async authorizeUser(user: AuthUser) {
         try{
             const res = await db(process.env.DATABASE).select('id','email','password_hash','username').where('email', user.email);
             const match = await bcrypt.compare(user.password, res[0].password_hash);
@@ -29,7 +30,6 @@ class UserService {
                 return 
             }
             const payload = { userId: res[0].id, username: res[0].username };
-            console.log("payload:", payload)
             const token = jwt.sign(payload, process.env.SECRET_KEY as string, { expiresIn: '1h' });
             return token     
         }catch(error){
@@ -37,11 +37,14 @@ class UserService {
         }
     }
 
-    static async getFollowingStatus(follower: string, followee: string){
+    static async createUser(user: User) {
 
     }
+    static async getFollowingStatus(follower: string, followee: string) {
+    
+    }
   
-    // Other methods for creating, updating, and deleting users...
+  
   }
   
   export default UserService;
