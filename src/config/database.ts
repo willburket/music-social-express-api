@@ -4,9 +4,6 @@ import * as dotenv from 'dotenv';
 dotenv.config()
 
 const PORT: number | undefined = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined;
-console.log(process.env.DB_USER)
-
-
 
 const db = knex({
     client: 'mysql2',

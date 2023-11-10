@@ -1,15 +1,14 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import router from './src/api/routes/UserRoutes';
+import bodyParser = require('body-parser');
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT;
 
-// app.get('/', (req: Request, res: Response) => {
-//   res.send('Express + TypeScript Server');
-// });
+app.use(bodyParser.json());
 app.use('/', router);
 
 app.listen(port, () => {
