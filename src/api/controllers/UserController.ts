@@ -2,10 +2,12 @@ import { Request, Response } from 'express';
 import UserService from '../services/UserService'
 import AuthUser from '../interfaces/AuthUser';
 import SignUpUser from '../interfaces/SignUpUser'; 
+import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
+import { stat } from 'fs';
 
 class UserController {
 
-  async getUser(req: Request, res: Response): Promise<void> {
+  async getUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     const username = req.params.username;
     const user = await UserService.getUser(username);
     res.json(user);
@@ -37,9 +39,45 @@ class UserController {
     res.json(jwt);
   }
 
-  async getFollowStatus(req: Request, res: Response): Promise<void> {
+  async getFollowStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const currentUser = req.user?.userId;
+    const followedUser = req.params.id;
+    const followedUserId: number = parseInt(followedUser, 10);
 
+    try{
+      const status = await UserService.getFollowStatus(currentUser as number, followedUserId)
+      res.status(200).json(status)
+    }catch(error){
+      res.status(500).json(error)
+    }
   }
+  async followUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const currentUser = req.user?.userId;
+    const followedUser = req.params.id;
+    const followedUserId: number = parseInt(followedUser, 10);
+   
+    try{
+      UserService.followUser(currentUser as number,followedUserId);
+      res.status(200)
+    }catch(error){
+      res.status(500).json(error)
+    }
+  }
+
+  async unfollowUser(req: AuthenticatedRequest, res: Response): Promise<void>{
+    
+    const currentUser = req.user?.userId;
+    const followedUser = req.params.id;
+    const followedUserId: number = parseInt(followedUser, 10);
+    try{
+      UserService.unfollowUser(currentUser as number, followedUserId);
+      res.status(200)
+    }catch(error){
+      res.status(500).json(error)
+    }
+    
+  }
+
 
 }
 

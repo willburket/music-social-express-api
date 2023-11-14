@@ -13,7 +13,7 @@ class UserService {
     static async getUser(username: string) {
         try{
             const res = await db(process.env.USER_TABLE as string)
-            .select('username','first_name','last_name','following_count','follower_count','bio')
+            .select('id','username','first_name','last_name','following_count','follower_count','bio')
             .where('username', username);
         return res
         } catch(error){
@@ -39,7 +39,7 @@ class UserService {
     }
 
     static async createUser(user: SignUpUser) {
-        const saltRounds = 10;
+        const saltRounds: number  = parseInt(process.env.SALT_ROUNDS as string, 10);
 
     try{
         const hash = await bcrypt.hash(user.password,saltRounds);
@@ -64,10 +64,47 @@ class UserService {
         return     
     }
     }
-    static async getFollowingStatus(follower: string, followee: string) {
-    
+
+    static async getFollowStatus(follower: number, followee: number) {
+        try{
+            const followStatus = await db(process.env.FOLLOWER_TABLE as string)
+            .where({follower_id: follower, followee_id: followee})
+
+            if (followStatus[0] === undefined){
+                return false
+            }
+            return true
+        } catch(error){
+            console.log("Error checking follow status:", error)
+        }
     }
-  
+
+    static async followUser(follower: number, followee: number) {
+        const followObject = {
+            follower_id: follower,
+            followee_id: followee,
+        }
+       try{
+            await db(process.env.FOLLOWER_TABLE as string).insert(followObject);
+            await db(process.env.USER_TABLE as string).where({id: follower}).increment('following_count', 1);
+            await db(process.env.USER_TABLE as string).where({id: followee}).increment('follower_count', 1);
+            
+       }catch(error){
+            console.log("Error following user:", error)
+       }
+
+    }
+    
+    static async unfollowUser(follower: number, followee: number){
+        try{
+            await db(process.env.FOLLOWER_TABLE as string)
+            .where({follower_id: follower, followee_id: followee}).del();
+            await db(process.env.USER_TABLE as string).where({id: follower}).decrement('following_count', 1);
+            await db(process.env.USER_TABLE as string).where({id: followee}).decrement('follower_count', 1);
+        }catch(error){
+            console.log("Error unfollowing user:", error);
+        }
+    }
   
   }
   
