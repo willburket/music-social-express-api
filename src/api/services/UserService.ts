@@ -105,6 +105,35 @@ class UserService {
             console.log("Error unfollowing user:", error);
         }
     }
+
+    static async getFollowers(userId: number){
+        try{
+            const followers = await db(process.env.FOLLOWER_TABLE as string).select('follower_id').where({followee_id: userId})
+            const followerIds = followers.map(obj => obj.follower_id)
+            const followerObjects = await db(process.env.USER_TABLE as string)      //maybe cache later?
+            .select('id', 'first_name', 'last_name', 'bio','username')
+            .whereIn('id', followerIds);
+
+            return followerObjects
+        }catch(error){
+            console.log("Error getting followers:", error);
+        }
+    }
+
+    static async getFollowing(userId: number){
+        try{
+            const following = await db(process.env.FOLLOWER_TABLE as string).select('followee_id').where({follower_id: userId})
+            const followingIds = following.map(obj => obj.followee_id)
+            const followingObjects = await db(process.env.USER_TABLE as string)      //maybe cache later?
+            .select('id', 'first_name', 'last_name', 'bio','username')
+            .whereIn('id', followingIds);
+
+            return followingObjects
+        }catch(error){
+            console.log("Error getting followers:", error);
+        }
+    }
+
   
   }
   

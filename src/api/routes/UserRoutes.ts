@@ -9,6 +9,9 @@ router.use(express.json());
 router.get('/users/:username', authenticateJWT, UserController.getUser);
 router.post('/auth', UserController.authorizeUser);
 router.post('/signup', UserController.createUser);
+router.get('/followers/:id', authenticateJWT, UserController.getFollowers);
+router.get('/following/:id', authenticateJWT, UserController.getFollowing);;
+
 
 // follow
 router.post('/follow/:id', authenticateJWT, UserController.followUser);

@@ -51,6 +51,7 @@ class UserController {
       res.status(500).json(error)
     }
   }
+
   async followUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     const currentUser = req.user?.userId;
     const followedUser = req.params.id;
@@ -64,7 +65,7 @@ class UserController {
     }
   }
 
-  async unfollowUser(req: AuthenticatedRequest, res: Response): Promise<void>{
+  async unfollowUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     
     const currentUser = req.user?.userId;
     const followedUser = req.params.id;
@@ -78,6 +79,26 @@ class UserController {
     
   }
 
+  async getFollowers(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const id = req.params.id;
+    const idNum: number = parseInt(id, 10);
+    try{
+      const followers = await UserService.getFollowers(idNum)
+      res.status(200).json(followers)
+    }catch(error){
+      res.status(500).json(error)
+    }
+  }
+  async getFollowing(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const id = req.params.id;
+    const idNum: number = parseInt(id, 10);
+    try{
+      const following = await UserService.getFollowing(idNum)
+      res.status(200).json(following)
+    }catch(error){
+      res.status(500).json(error)
+    }
+  }
 
 }
 
