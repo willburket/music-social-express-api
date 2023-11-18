@@ -16,6 +16,7 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
         req.user = typedUser;
         
     } catch(error){
+        console.log('error',error)
         return res.status(403).json({message: 'Forbidden'})
     }
     
