@@ -1,10 +1,13 @@
 import db from '../../config/database'; 
 import AuthUser from '../interfaces/AuthUser';
-import User from '../interfaces/User';
+// import User from '../interfaces/User';
+import CurrentUser from '../interfaces/CurrentUser';
 import SignUpUser from '../interfaces/SignUpUser';
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+
+
 
 dotenv.config()
 
@@ -30,8 +33,8 @@ class UserService {
                 // password incorrect
                 return 
             }
-            const payload = { userId: res[0].id, username: res[0].username };
-            const token = jwt.sign(payload, process.env.SECRET_KEY as string, { expiresIn: '1h' });
+            const payload = { id: res[0].id, username: res[0].username };
+            const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
             return token     
         }catch(error){
             console.log('Error checking user:', error)
@@ -55,9 +58,9 @@ class UserService {
         const userId = await db(process.env.USER_TABLE as string).insert(dbUser)
         const id = userId[0]
         
-        const payload = { userId: id, username: user.username };
+        const payload = { id: id, username: user.username };
         
-        const token = jwt.sign(payload, process.env.SECRET_KEY as string, { expiresIn: '1h' });
+        const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
         return token 
     }catch(error){
         console.log("Error saving user:",error);
@@ -112,7 +115,8 @@ class UserService {
             const followerIds = followers.map(obj => obj.follower_id)
             const followerObjects = await db(process.env.USER_TABLE as string)      //maybe cache later?
             .select('id', 'first_name', 'last_name', 'bio','username')
-            .whereIn('id', followerIds);
+            .whereIn('id', followerIds).limit(1)
+            .offset(1)              // update later
 
             return followerObjects
         }catch(error){
@@ -126,11 +130,12 @@ class UserService {
             const followingIds = following.map(obj => obj.followee_id)
             const followingObjects = await db(process.env.USER_TABLE as string)      //maybe cache later?
             .select('id', 'first_name', 'last_name', 'bio','username')
-            .whereIn('id', followingIds);
+            .whereIn('id', followingIds).limit(1).offset(1) // update later
+
 
             return followingObjects
         }catch(error){
-            console.log("Error getting followers:", error);
+            console.log("Error getting following:", error);
         }
     }
 

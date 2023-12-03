@@ -22,6 +22,24 @@ class PostService{
             return     
         }
     }
+
+    static async getUserPosts(id: number){
+        try{
+            const userPosts = await db(process.env.POST_TABLE as string).where({user_id: id}).select('*')
+            return userPosts;
+        }catch(error){
+            console.log("Error getting user's posts:",error);   
+        }
+    }
+
+    static async getPostsByUsername(username: string) {
+        try{
+            const userPosts = await db(process.env.POST_TABLE as string).where({username: username}).select('*')
+            return userPosts;
+        }catch(error) {
+            console.log("Error fetching posts by username:", error)
+        }
+    }
 }
 
 export default PostService;

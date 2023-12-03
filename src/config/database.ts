@@ -1,6 +1,7 @@
 import knex from "knex";
 import * as dotenv from 'dotenv';
 
+
 dotenv.config()
 
 const PORT: number | undefined = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined;

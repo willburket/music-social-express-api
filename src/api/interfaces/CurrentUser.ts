@@ -1,5 +1,5 @@
 interface CurrentUser {
-    userId: number;
+    id: number;
     username: string;
 }
 

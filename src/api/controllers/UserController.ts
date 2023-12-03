@@ -40,7 +40,7 @@ class UserController {
   }
 
   async getFollowStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
-    const currentUser = req.user?.userId;
+    const currentUser = req.user?.id;
     const followedUser = req.params.id;
     const followedUserId: number = parseInt(followedUser, 10);
 
@@ -53,7 +53,7 @@ class UserController {
   }
 
   async followUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    const currentUser = req.user?.userId;
+    const currentUser = req.user?.id;
     const followedUser = req.params.id;
     const followedUserId: number = parseInt(followedUser, 10);
    
@@ -67,7 +67,7 @@ class UserController {
 
   async unfollowUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     
-    const currentUser = req.user?.userId;
+    const currentUser = req.user?.id;
     const followedUser = req.params.id;
     const followedUserId: number = parseInt(followedUser, 10);
     try{
