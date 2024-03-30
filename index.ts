@@ -12,7 +12,7 @@ const app: Express = express();
 const port = process.env.PORT;
 
 const corsOptions = {
-  origin: `http://localhost:${process.env.FRONTEND_PORT}`,
+  origin: `http://localhost:${process.env.FRONTEND_PORT}`,      // change in prod
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 };
@@ -21,5 +21,5 @@ app.use(cors(corsOptions));
 app.use('/', router);
 
 app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+  console.log(`⚡️[server]: Server is running at http://localhost:${port}`); 
 });

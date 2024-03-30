@@ -3,6 +3,7 @@ import db from '../../config/database';
 
 class FeedHelper {
     static async getFollowedUsersPosts(userId: number, offset: number){
+            // make it so it filters out posts you've already liked/disliked/retweeted?
         try{
             const posts = await db.select(`${process.env.POST_TABLE}.*`, `${process.env.USER_TABLE}.username`)
             .from(`${process.env.POST_TABLE}`)
