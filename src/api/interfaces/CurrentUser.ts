@@ -1,6 +1,6 @@
 interface CurrentUser {
-    id: number;
-    username: string;
+  id: number;
+  username: string;
 }
 
 export default CurrentUser;
