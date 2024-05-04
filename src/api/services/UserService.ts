@@ -33,7 +33,7 @@ class UserService {
         return;
       }
       const payload = { id: res[0].id, username: res[0].username };
-      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '5m' });
+      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '30m' });
       return token;
     } catch (error) {
       console.log('Error checking user:', error);

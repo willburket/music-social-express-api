@@ -3,6 +3,7 @@ import UserController from '../controllers/UserController';
 import PostController from '../controllers/PostController';
 import FeedController from '../controllers/FeedController';
 import { authenticateJWT } from '../middlewares/Authenticate';
+import BetController from '../controllers/BetController';
 
 const router: Router = express.Router();
 router.use(express.json());
@@ -26,4 +27,8 @@ router.get('/user-posts/:username', authenticateJWT, PostController.getPostsByUs
 
 //feed
 router.get('/feed', authenticateJWT, FeedController.getFeed);
+
+//betting 
+
+router.get('/scores', BetController.getScore)
 export default router;

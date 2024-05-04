@@ -12,8 +12,8 @@ const app: Express = express();
 const port = process.env.PORT;
 
 const corsOptions = {
-  // origin: `http://localhost:${process.env.FRONTEND_PORT}`, // change in prod
-  origin: `${process.env.CORS_ORIGIN}`, // change in local
+  origin: `http://localhost:${process.env.FRONTEND_PORT}`, // change in prod
+  // origin: `${process.env.CORS_ORIGIN}`, // change in local
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 };
