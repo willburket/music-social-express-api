@@ -4,12 +4,14 @@ import CreatePost from '../interfaces/CreatePost';
 class PostService {
   static async createPost(post: CreatePost) {
     try {
+      // console.log(post)
       // const hash = await bcrypt.hash(user.password,saltRounds);
       const dbPost = {
         username: post.username,
         user_id: post.userId,
         content: post.content,
         reply: post.reply,
+        betslip: post.betslip,
       };
 
       const res = await db(process.env.POST_TABLE as string).insert(dbPost);

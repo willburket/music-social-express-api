@@ -4,6 +4,7 @@ interface CreatePost {
   content: string;
   reply: boolean;
   replyTo: number | null;
+  betslip: number | null;
 }
 
 export default CreatePost;

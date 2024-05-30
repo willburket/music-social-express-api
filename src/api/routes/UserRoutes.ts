@@ -28,7 +28,7 @@ router.get('/user-posts/:username', authenticateJWT, PostController.getPostsByUs
 //feed
 router.get('/feed', authenticateJWT, FeedController.getFeed);
 
-//betting 
+//betting
+router.get('/scores', BetController.getScore);
 
-router.get('/scores', BetController.getScore)
 export default router;
