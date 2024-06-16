@@ -29,9 +29,14 @@ CREATE TABLE Betslips (
 );
 
 ALTER TABLE Betslips
-MODIFY COLUMN payout DECIMAL(10, 3);
+ADD COLUMN username VARCHAR(15) NOT NULL;
 
-DELETE FROM Betslips
-WHERE id >= 1;
+ALTER TABLE Betslips
+ADD CONSTRAINT fk_username
+FOREIGN KEY (username) REFERENCES Users(username)
+ON UPDATE CASCADE;
+
+ALTER TABLE Betslips
+ADD COLUMN bet_1_outcome VARCHAR(1);
 
 SELECT * FROM Users.Betslips;

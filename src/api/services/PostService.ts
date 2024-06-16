@@ -32,6 +32,12 @@ class PostService {
       const userPosts = await db(process.env.POST_TABLE as string)
         .where({ user_id: id })
         .select('*');
+
+      // const userPosts = await db(process.env.POST_TABLE as string)
+      //   .leftJoin('Betslips', 'Tweets.betslip_id', 'Betslips.id')
+      //   .select('*')
+      //   .where('Tweets.user_id', id)
+
       return userPosts;
     } catch (error) {
       console.log("Error getting user's posts:", error);
@@ -43,6 +49,12 @@ class PostService {
       const userPosts = await db(process.env.POST_TABLE as string)
         .where({ username: username })
         .select('*');
+
+      // query tweet table, betslip table, bet table by user
+      // use joins and index?
+      // paginate by maybe 25 at a time?
+      // we want to be able to populate posts/betslips all in one fetch from the frontend
+
       return userPosts;
     } catch (error) {
       console.log('Error fetching posts by username:', error);

@@ -1,30 +1,34 @@
+import { compareSync } from 'bcrypt';
 import db from '../../config/database';
 import BetSlip from '../interfaces/BetSlip';
+import Score from '../interfaces/Score';
+
 const axios = require('axios');
 
 const apiKey = process.env.ODDS_API_KEY;
 
 class BetService {
-  static async getScore(sport: string, id: string) {
+  static async getGameData(event: any) {
+    const sport = event.league;
+    const id = event.api_id;
+
     try {
       const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sport}/scores/?eventIds=${id}`, {
         params: {
           apiKey,
         },
       });
-      console.log(response.data[0].scores);
-      // above line returns
-      //   [{ name: 'Dallas Mavericks', score: '114' },
-      //   { name: 'Minnesota Timberwolves', score: '105' }]
 
-      return;
+      const gameData = response.data[0];
+
+      return gameData;
     } catch (error) {
       console.log('Error getting score:', error);
     }
   }
 
   static async setBet(bet: any) {
-    if (bet.type !== 'spreads') {
+    if (bet.type === 'h2h') {
       try {
         const result = await db(process.env.BET_TABLE as string)
           .select('id')
@@ -51,7 +55,7 @@ class BetService {
             api_event_id: bet.id,
             bet_type: bet.type,
             pick: bet.pick.name,
-            spread: bet.pick.point,
+            point: bet.pick.point,
           });
         if (result.length > 0) {
           await BetService.incrementBetQty(result[0].id);
@@ -70,13 +74,13 @@ class BetService {
 
     try {
       let dbPost;
-      if (bet.type === 'spreads') {
+      if (bet.type === 'spreads' || bet.type === 'totals') {
         dbPost = {
           api_event_id: bet.id,
           bet_type: bet.type,
           event_id: eventId,
           pick: bet.pick.name,
-          spread: bet.pick.point,
+          point: bet.pick.point,
           qty: 1,
           home: bet.home,
           away: bet.away,
@@ -138,6 +142,9 @@ class BetService {
 
       const res = await db(process.env.EVENT_TABLE as string).insert(dbEvent);
       const eventId = res[0];
+
+      // schedule outcome check
+
       return eventId;
     } catch (error) {
       console.log('Error creating event:', error);
@@ -157,23 +164,21 @@ class BetService {
     }
   }
 
-  static async createBetslip(slip: any) {
+  static async createBetslip(user: any, slip: any) {
     let betslip: BetSlip = {
+      id: null,
+      username: user.username,
+      user_id: user.id,
       bet_1_id: null,
       bet_1_odds: null,
-      bet_1_outcome: null,
       bet_2_id: null,
       bet_2_odds: null,
-      bet_2_outcome: null,
       bet_3_id: null,
       bet_3_odds: null,
-      bet_3_outcome: null,
       bet_4_id: null,
       bet_4_odds: null,
-      bet_4_outcome: null,
       bet_5_id: null,
       bet_5_odds: null,
-      bet_5_outcome: null,
       odds: slip.odds,
       wager: slip.wager,
       payout: slip.payout,
@@ -189,6 +194,7 @@ class BetService {
         }
         const res = await db(process.env.BETSLIP_TABLE as string).insert(betslip);
         const id = res[0];
+
         return id;
       }
     } catch (error) {
@@ -207,16 +213,280 @@ class BetService {
     }
   }
 
-  static async getOutcome(bet: string) {
-    // getscore with id
-    // check if game is finished
-    // fill out outcome in db
+  //   const dbEvent = {
+  //     api_id: bet.id,
+  //     league: bet.league,
+  //     home: bet.home,
+  //     away: bet.away,
+  //     start_time: bet.time,
+  //   };
+
+  static async getOutcome(event: any, eventId: number) {
+    const gameData = await BetService.getGameData(event);
+
+    if (gameData.completed) {
+      // fill out outcome in event db
+      const scoreObj = await BetService.setEventOutcome(gameData, eventId);
+      await BetService.populateBetOutcomes(eventId, scoreObj);
+    } else {
+      //reschedule
+    }
   }
 
-  static async scheduleCheck(bet: string) {
-    // x amount of hours after game starts
-    // if games not finished check again in 30 min?
+  static async setEventOutcome(gameData: any, eventId: number) {
+    const scores = gameData.scores;
+
+    let scoreObj: Score = {
+      home: null,
+      away: null,
+    };
+
+    try {
+      for (let x = 0; x < scores.length; x++) {
+        const score = parseInt(scores[x].score);
+
+        if (scores[x].name === gameData.home_team) {
+          await db(process.env.EVENT_TABLE as string)
+            .where('id', eventId)
+            .update('home_score', score);
+
+          scoreObj.home = score;
+        } else {
+          await db(process.env.EVENT_TABLE as string)
+            .where('id', eventId)
+            .update('away_score', score);
+
+          scoreObj.away = score;
+        }
+      }
+
+      return scoreObj;
+    } catch (error) {
+      console.log('Error setting Outcome:', error);
+    }
+  }
+
+  static async scheduleCheck(eventId: string, dBevent: any) {
+    // schedule getOutcome x amount of hours after game starts
+    // if games not finished check again in 20 min?
+    // do this until game is finished
+  }
+
+  static async populateBetOutcomes(eventId: number, score: any) {
+    // get list of all Bets dB entries that bet on a given event
+    const bets = await db(process.env.BET_TABLE as string)
+      .where('event_id', eventId)
+      .select('*');
+
+    console.log('populate bet outcomes:', bets);
+
+    for (let x = 0; x < bets.length; x++) {
+      const outcome = await BetService.getBetOutcome(bets[x], score);
+      // set outcome in bet dB
+      if (outcome) {
+        await Promise.all([
+            // update bet table
+            db(process.env.BET_TABLE as string)
+            .where('id', bets[x].id)
+            .update('outcome', outcome),
+            // populate betslips that include this bet
+            BetService.populateBetslips(bets[x].id, outcome)
+        ])
+      }
+    }
+  }
+
+  static async populateBetslips(betId: number, outcome: string) {
+    const betslips = await db(process.env.BETSLIP_TABLE as string)
+      .where('bet_1_id', betId)
+      .orWhere('bet_2_id', betId)
+      .orWhere('bet_3_id', betId)
+      .orWhere('bet_4_id', betId)
+      .orWhere('bet_5_id', betId)
+      .select('*');
+
+    for (let x = 0; x < betslips.length; x++) {
+      const id = betslips[x].id;
+
+      try {
+        const updatedSlip = await BetService.populateBetslip(id, betslips[x], outcome);
+
+        if (updatedSlip) {
+          await BetService.updateBetslipOutcome(updatedSlip, outcome);
+        }
+        return;
+      } catch (error) {
+        console.log('Error populating betslips:', error);
+      }
+
+    }
+  }
+
+  static async populateBetslip(betId: number, betslip: BetSlip, outcome: string) {
+    try {
+      for (let y = 1; y <= 5; y++) {
+        const betIdKey = `bet_${y}_id`;
+        const betOutcomeKey = `bet_${y}_outcome`;
+
+        if ((betslip as any)[betIdKey] === betId) {
+          (betslip as any)[betOutcomeKey] = outcome;
+
+          await db(process.env.BETSLIP_TABLE as string)
+            .where('id', betslip.id)
+            .update(`bet_${y}_id`, outcome);
+
+          return betslip;
+        }
+      }
+    } catch (error) {
+      console.log('Error populating betslip:', error);
+    }
+  }
+
+  static async updateBetslipOutcome(betslip: BetSlip, outcome: string) {
+    try {
+      const isFinalBet = await BetService.finalBetCheck(betslip);
+
+      if (betslip.outcome === null) {
+        if (outcome === 'L') {
+          await Promise.all([
+            // set betslip outcome to L
+            db(process.env.BETSLIP_TABLE as string)
+              .where('id', betslip.id)
+              .update('outcome', 'L'),
+            // subtract wager from users overall winnings
+            db(process.env.USER_TABLE as string)
+              .where('id', betslip.user_id)
+              .decrement('winnings', betslip.wager!),
+          ]);
+        } else if (outcome === 'D') {
+          // set betslip to draw
+          await db(process.env.BETSLIP_TABLE as string)
+            .where('id', betslip.id)
+            .update('outcome', 'D');
+          // push, no need to update
+        } else if (outcome === 'W' && isFinalBet) {
+          await Promise.all([
+            // set betslip outcome to W
+            db(process.env.BETSLIP_TABLE as string)
+              .where('id', betslip.id)
+              .update('outcome', 'W'),
+            // add payout to users overall winnings
+            db(process.env.USER_TABLE as string)
+              .where('id', betslip.user_id)
+              .increment('winnings', betslip.payout!),
+          ]);
+        }
+      }
+    } catch (error) {
+      console.log('Error updating betslip outcome:', error);
+    }
+  }
+
+  static async finalBetCheck(betslip: BetSlip) {
+    for (let x = 1; x <= 5; x++) {
+      const betIdKey = `bet_${x}_id`;
+      const betOutcomeKey = `bet_${x}_outcome`;
+
+      if ((betslip as any)[betIdKey] !== null && (betslip as any)[betOutcomeKey] === null) {
+        return false;
+      }
+      if ((betslip as any)[betOutcomeKey] === 'L' || (betslip as any)[betOutcomeKey] === 'D') {
+        return false;
+      }
+      if ((betslip as any)[betIdKey] === null) {
+        return true;
+      }
+    }
+    return true;
+  }
+
+  static async getBetOutcome(bet: any, score: any) {
+    if (bet.bet_type === 'h2h') {
+      return await BetService.checkML(bet, score);
+    } else if (bet.bet_type === 'spreads') {
+      return await BetService.checkSpread(bet, score);
+    } else if (bet.bet_type === 'totals') {
+      return await BetService.checkTotal(bet, score);
+    }
+  }
+
+  static async checkML(bet: any, score: any) {
+    try {
+      if (bet.pick === bet.home_team) {
+        if (score.home > score.away) {
+          return 'W';
+        } else if (score.home < score.away) {
+          return 'L';
+        } else if (score.home === score.away) {
+          //PUSH
+          return 'D';
+        }
+      } else {
+        if (score.home < score.away) {
+          return 'W';
+        } else if (score.home > score.away) {
+          return 'L';
+        } else if (score.home === score.away) {
+          return 'D';
+        }
+      }
+    } catch (error) {
+      console.log('Error checking ML bet:', error);
+    }
+  }
+
+  static async checkSpread(bet: any, score: any) {
+    const teamScore = bet.pick === bet.home_team ? score.home : score.away;
+    const oppScore = bet.pick === bet.home_team ? score.away : score.home;
+    const pointDiff = teamScore - oppScore; // if point diff is positive you win
+
+    try {
+      if (pointDiff > bet.point(-1)) {
+        return 'W';
+      } else if (pointDiff < bet.point(-1)) {
+        return 'L';
+      } else if (pointDiff === bet.point(-1)) {
+        return 'D';
+      }
+    } catch (error) {
+      console.log('Error checking spread bet:', error);
+    }
+  }
+
+  static async checkTotal(bet: any, score: any) {
+    const total = score.home + score.away;
+
+    try {
+      if (bet.pick === 'Over' && total > bet.point) {
+        return 'W';
+      } else if (bet.pick === 'Under' && total < bet.point) {
+        return 'W';
+      } else if (total === bet.point) {
+        return 'D';
+      } else {
+        return 'L';
+      }
+    } catch (error) {
+      console.log('Error checking total bet:', error);
+    }
   }
 }
 
 export default BetService;
+
+// Score response, for reference
+// {
+//     id: '44eb2ab1727245ca4445455e8883013f',
+//     sport_key: 'icehockey_nhl',
+//     sport_title: 'NHL',
+//     commence_time: '2024-06-01T00:40:21Z',
+//     completed: false,
+//     home_team: 'Dallas Stars',
+//     away_team: 'Edmonton Oilers',
+//     scores: [
+//       { name: 'Dallas Stars', score: '0' },
+//       { name: 'Edmonton Oilers', score: '3' }
+//     ],
+//     last_update: '2024-06-01T02:34:40Z'
+//   }

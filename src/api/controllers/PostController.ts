@@ -11,8 +11,6 @@ class PostController {
       const currentUser = req.user;
       const content = req.body.text;
 
-      console.log(req);
-
       if (currentUser) {
         let post: CreatePost = {
           userId: currentUser.id,
@@ -23,22 +21,12 @@ class PostController {
           betslip: null,
         };
 
-        const betslip = await BetService.createBetslip(req.body);
+        const betslip = await BetService.createBetslip(currentUser, req.body);
         console.log('Betslip id:', betslip);
 
         if (betslip) {
           post.betslip = betslip;
         }
-        // console.log('Full Post:', req.body.picks[0].pick);
-
-        // bet service to create bet
-        // event service as needed
-        // add items to betslip servce
-        // add post w/ betslip id:
-
-        //add betslip id to post table
-
-        // DO NOT DELETE, THIS WAS HOW IT WORKED BEFORE, COMMENTED OUT FOR TESTING
         newPost = await PostService.createPost(post);
       }
       res.status(200).json(newPost);
@@ -62,6 +50,8 @@ class PostController {
     const username = req.params.username;
     try {
       const posts = await PostService.getPostsByUsername(username);
+
+      console.log('POSTS BY USERNAME');
       res.status(200).json(posts);
     } catch (error) {
       res.status(500).json(error);

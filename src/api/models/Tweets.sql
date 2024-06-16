@@ -14,5 +14,7 @@ CREATE TABLE Tweets (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
+DELETE FROM Tweets
+WHERE id >= 21;
 
 SELECT * FROM Tweets;

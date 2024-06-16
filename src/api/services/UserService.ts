@@ -152,6 +152,10 @@ class UserService {
       console.log('Error getting following:', error);
     }
   }
+
+  static async updateWinnings(userId: number, payout: number) {
+    // add/subtract units from total winnings
+  }
 }
 
 export default UserService;
