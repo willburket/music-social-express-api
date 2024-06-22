@@ -51,7 +51,6 @@ class PostController {
     try {
       const posts = await PostService.getPostsByUsername(username);
 
-      console.log('POSTS BY USERNAME');
       res.status(200).json(posts);
     } catch (error) {
       res.status(500).json(error);

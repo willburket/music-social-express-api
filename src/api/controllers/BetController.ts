@@ -6,13 +6,16 @@ import BetService from '../services/BetService';
 class BetController {
   async getScore(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const id = '44eb2ab1727245ca4445455e8883013f';
-      const sport = 'icehockey_nhl';
-      const bet = null;
+      const event = {
+        api_id: '3e7324666d7c16c1184e9d44d986c21a',
+        league: 'icehockey_nhl',
+      };
 
-      await BetService.populateBetslips(21, 'W');
+      const eventId = 12;
 
-      res.status(200).json(bet);
+      await BetService.getOutcome(event, eventId);
+
+      res.status(200).json();
     } catch (error) {
       res.status(500).json(error);
     }

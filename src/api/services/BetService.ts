@@ -6,6 +6,7 @@ import Score from '../interfaces/Score';
 const axios = require('axios');
 
 const apiKey = process.env.ODDS_API_KEY;
+const daysFrom = 1;
 
 class BetService {
   static async getGameData(event: any) {
@@ -16,11 +17,12 @@ class BetService {
       const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sport}/scores/?eventIds=${id}`, {
         params: {
           apiKey,
+          daysFrom,
         },
       });
 
       const gameData = response.data[0];
-
+      console.log('getgamedata:', response);
       return gameData;
     } catch (error) {
       console.log('Error getting score:', error);
@@ -223,13 +225,16 @@ class BetService {
 
   static async getOutcome(event: any, eventId: number) {
     const gameData = await BetService.getGameData(event);
-
+    console.log(gameData);
     if (gameData.completed) {
+      console.log('Game outcome:', gameData);
+
       // fill out outcome in event db
       const scoreObj = await BetService.setEventOutcome(gameData, eventId);
       await BetService.populateBetOutcomes(eventId, scoreObj);
     } else {
       //reschedule
+      console.log('Game not complete');
     }
   }
 
@@ -273,52 +278,66 @@ class BetService {
   }
 
   static async populateBetOutcomes(eventId: number, score: any) {
-    // get list of all Bets dB entries that bet on a given event
-    const bets = await db(process.env.BET_TABLE as string)
-      .where('event_id', eventId)
-      .select('*');
+    try {
+      // get list of all Bets dB entries that bet on a given event
+      const bets = await db(process.env.BET_TABLE as string)
+        .where('event_id', eventId)
+        .select('*');
 
-    console.log('populate bet outcomes:', bets);
+      console.log('populate bet outcomes:', bets);
 
-    for (let x = 0; x < bets.length; x++) {
-      const outcome = await BetService.getBetOutcome(bets[x], score);
-      // set outcome in bet dB
-      if (outcome) {
-        await Promise.all([
+      // I think we can do this better with joins?*******
+
+      for (let x = 0; x < bets.length; x++) {
+        const outcome = await BetService.getBetOutcome(bets[x], score);
+        // set outcome in bet dB
+        if (outcome) {
+          await Promise.all([
             // update bet table
             db(process.env.BET_TABLE as string)
-            .where('id', bets[x].id)
-            .update('outcome', outcome),
+              .where('id', bets[x].id)
+              .update('outcome', outcome),
             // populate betslips that include this bet
-            BetService.populateBetslips(bets[x].id, outcome)
-        ])
+            BetService.populateBetslips(bets[x].id, outcome),
+          ]);
+
+          //    // update bet table
+          //    await db(process.env.BET_TABLE as string)
+          //    .where('id', bets[x].id)
+          //    .update('outcome', outcome),
+          //    // populate betslips that include this bet
+          //    await BetService.populateBetslips(bets[x].id, outcome)
+        }
       }
+    } catch (error) {
+      console.log('Error populating bet outcome:', error);
     }
   }
 
   static async populateBetslips(betId: number, outcome: string) {
-    const betslips = await db(process.env.BETSLIP_TABLE as string)
-      .where('bet_1_id', betId)
-      .orWhere('bet_2_id', betId)
-      .orWhere('bet_3_id', betId)
-      .orWhere('bet_4_id', betId)
-      .orWhere('bet_5_id', betId)
-      .select('*');
+    try {
+      const betslips = await db(process.env.BETSLIP_TABLE as string)
+        .where('bet_1_id', betId)
+        .orWhere('bet_2_id', betId)
+        .orWhere('bet_3_id', betId)
+        .orWhere('bet_4_id', betId)
+        .orWhere('bet_5_id', betId)
+        .select('*');
 
-    for (let x = 0; x < betslips.length; x++) {
-      const id = betslips[x].id;
+      console.log('POPULATING BETSLIPS', betslips);
 
-      try {
+      for (let x = 0; x < betslips.length; x++) {
+        const id = betslips[x].id;
+
         const updatedSlip = await BetService.populateBetslip(id, betslips[x], outcome);
 
         if (updatedSlip) {
           await BetService.updateBetslipOutcome(updatedSlip, outcome);
         }
-        return;
-      } catch (error) {
-        console.log('Error populating betslips:', error);
       }
-
+      return;
+    } catch (error) {
+      console.log('Error populating betslips:', error);
     }
   }
 
@@ -442,11 +461,11 @@ class BetService {
     const pointDiff = teamScore - oppScore; // if point diff is positive you win
 
     try {
-      if (pointDiff > bet.point(-1)) {
+      if (pointDiff > bet.point * -1) {
         return 'W';
-      } else if (pointDiff < bet.point(-1)) {
+      } else if (pointDiff < bet.point * -1) {
         return 'L';
-      } else if (pointDiff === bet.point(-1)) {
+      } else if (pointDiff === bet.point * -1) {
         return 'D';
       }
     } catch (error) {
@@ -490,3 +509,5 @@ export default BetService;
 //     ],
 //     last_update: '2024-06-01T02:34:40Z'
 //   }
+
+// '48dbd6bbfeb72fae383de550504df9cc','basketball_nba'
