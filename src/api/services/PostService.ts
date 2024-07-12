@@ -44,26 +44,6 @@ class PostService {
     }
   }
 
-  // static async getPostsByUsername(username: string) {
-  //   try {
-
-  //     // get users tweets
-  //     const userPosts = await db(process.env.POST_TABLE as string)
-  //       .where({ username: username })
-  //       .select('*');
-
-  //     //return tweets, betslips, bets
-
-  //     // query tweet table, betslip table, bet table by user
-  //     // use joins and index?
-  //     // paginate by maybe 25 at a time?
-  //     // we want to be able to populate posts/betslips all in one fetch from the frontend
-
-  //     return userPosts;
-  //   } catch (error) {
-  //     console.log('Error fetching posts by username:', error);
-  //   }
-  // }
   static async getPostsByUsername(username: string) {
     try {
       const posts = await db(process.env.POST_TABLE as string)
@@ -132,6 +112,8 @@ class PostService {
     });
     return cleanedPosts;
   }
+
+
 }
 
 export default PostService;

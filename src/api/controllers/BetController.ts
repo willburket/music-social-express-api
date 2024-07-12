@@ -7,17 +7,18 @@ class BetController {
   async getScore(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const event = {
-        api_id: '3e7324666d7c16c1184e9d44d986c21a',
-        league: 'icehockey_nhl',
+        api_id: '230a9d381f66262b7dab9807503ca02b',
+        league: 'baseball_mlb',
       };
 
-      const eventId = 12;
+      const eventId = 19;
 
       await BetService.getOutcome(event, eventId);
 
       res.status(200).json();
     } catch (error) {
       res.status(500).json(error);
+      console.log(error)
     }
   }
 }
