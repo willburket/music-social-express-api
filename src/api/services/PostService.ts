@@ -112,8 +112,6 @@ class PostService {
     });
     return cleanedPosts;
   }
-
-
 }
 
 export default PostService;

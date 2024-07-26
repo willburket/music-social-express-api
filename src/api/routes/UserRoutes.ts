@@ -4,6 +4,7 @@ import PostController from '../controllers/PostController';
 import FeedController from '../controllers/FeedController';
 import { authenticateJWT } from '../middlewares/Authenticate';
 import BetController from '../controllers/BetController';
+import LeaderboardController from '../controllers/LeaderboardController';
 
 const router: Router = express.Router();
 router.use(express.json());
@@ -30,5 +31,8 @@ router.get('/feed', authenticateJWT, FeedController.getFeed);
 
 //betting
 router.get('/scores', BetController.getScore);
+
+//leaderboards
+router.get('/leaderboards/:type', authenticateJWT, LeaderboardController.getLeaderboard);
 
 export default router;

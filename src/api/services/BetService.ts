@@ -104,7 +104,7 @@ class BetService {
       }
       const res = await db(process.env.BET_TABLE as string).insert(dbPost);
       const postId = res[0];
-      
+
       return postId;
     } catch (error) {
       console.log('Error creating post:', error);
@@ -119,11 +119,8 @@ class BetService {
           api_id: bet.id,
         });
       if (result.length > 0) {
-
-
         return result[0].id;
       } else {
-
         const id = await BetService.createEvent(bet);
         return id;
       }
@@ -144,11 +141,11 @@ class BetService {
 
       const res = await db(process.env.EVENT_TABLE as string).insert(dbEvent);
       const eventId = res[0];
-      
-      console.log("EventID:", eventId)
+
+      console.log('EventID:', eventId);
 
       // schedule outcome check
-      await BetService.scheduleCheck(eventId, dbEvent)
+      await BetService.scheduleCheck(eventId, dbEvent);
 
       return eventId;
     } catch (error) {
@@ -233,11 +230,11 @@ class BetService {
       // fill out outcome in event db
       const scoreObj = await BetService.setEventOutcome(gameData, eventId);
       await BetService.populateBetOutcomes(eventId, scoreObj);
-      return true
+      return true;
     } else {
       //reschedule
       console.log('Game not complete');
-      return false
+      return false;
     }
   }
 
@@ -275,53 +272,50 @@ class BetService {
   }
 
   static async scheduleCheck(eventId: number, dBevent: any) {
-
     let checkTime;
     const initialDate = new Date(dBevent.start_time);
 
-    switch(dBevent.league){
-        case 'basketball_nba':
-            // 2.25 h
-            checkTime = new Date(initialDate.getTime() + 2.25 * 60 * 60 * 1000);
-        case 'baseball_mlb':
-            // 2.75 h
-            checkTime = new Date(initialDate.getTime() + 2.75 * 60 * 60 * 1000);
-        case 'americanfootball_nfl':
-            // 3.25 h
-            checkTime = new Date(initialDate.getTime() + 3.25 * 60 * 60 * 1000);
-        case 'icehockey_nhl':
-            // 2.5 h
-            checkTime = new Date(initialDate.getTime() + 2.5 * 60 * 60 * 1000);
-        case 'soccer_epl':
-            // 2 h 
-            checkTime = new Date(initialDate.getTime() + 2 * 60 * 60 * 1000);
+    switch (dBevent.league) {
+      case 'basketball_nba':
+        // 2.25 h
+        checkTime = new Date(initialDate.getTime() + 2.25 * 60 * 60 * 1000);
+      case 'baseball_mlb':
+        // 2.75 h
+        checkTime = new Date(initialDate.getTime() + 2.75 * 60 * 60 * 1000);
+      case 'americanfootball_nfl':
+        // 3.25 h
+        checkTime = new Date(initialDate.getTime() + 3.25 * 60 * 60 * 1000);
+      case 'icehockey_nhl':
+        // 2.5 h
+        checkTime = new Date(initialDate.getTime() + 2.5 * 60 * 60 * 1000);
+      case 'soccer_epl':
+        // 2 h
+        checkTime = new Date(initialDate.getTime() + 2 * 60 * 60 * 1000);
     }
 
-    try{
-        // schedule getOutcome duration of hours after game starts
-        const gameOutcome = await schedule.scheduleJob(checkTime, () => BetService.getOutcome(dBevent,eventId));
-        console.log("Check scheduled")
-        if(!gameOutcome){
-            // if games not finished check again in 15 min
-            await BetService.rescheduleCheck(eventId, dBevent)
-        }
-        
-    }catch(error){
-        console.log("Error scheduling check:", error)
+    try {
+      // schedule getOutcome duration of hours after game starts
+      const gameOutcome = await schedule.scheduleJob(checkTime, () => BetService.getOutcome(dBevent, eventId));
+      console.log('Check scheduled');
+      if (!gameOutcome) {
+        // if games not finished check again in 15 min
+        await BetService.rescheduleCheck(eventId, dBevent);
+      }
+    } catch (error) {
+      console.log('Error scheduling check:', error);
     }
   }
 
-  static async rescheduleCheck(eventId: number, dBevent: any){
+  static async rescheduleCheck(eventId: number, dBevent: any) {
     const fifteenMinutes = new Date(Date.now() + 15 * 60 * 1000);
-    const gameOutcome = await schedule.scheduleJob(fifteenMinutes, () => BetService.getOutcome(dBevent,eventId));
+    const gameOutcome = await schedule.scheduleJob(fifteenMinutes, () => BetService.getOutcome(dBevent, eventId));
 
-    if(!gameOutcome){
-        await BetService.rescheduleCheck(eventId, dBevent)
-        console.log("Rescheduling check for 15 minutes")
+    if (!gameOutcome) {
+      await BetService.rescheduleCheck(eventId, dBevent);
+      console.log('Rescheduling check for 15 minutes');
     }
-    return
+    return;
   }
-
 
   static async populateBetOutcomes(eventId: number, score: any) {
     try {
@@ -387,7 +381,6 @@ class BetService {
     }
   }
 
-
   static async populateBetslip(betId: number, betslip: BetSlip, outcome: string) {
     try {
       for (let y = 1; y <= 5; y++) {
@@ -401,7 +394,7 @@ class BetService {
             .where('id', betslip.id)
             .update(`bet_${y}_outcome`, outcome);
 
-            console.log("populateBetslip:", betslip)
+          console.log('populateBetslip:', betslip);
 
           return betslip;
         }
@@ -414,8 +407,6 @@ class BetService {
   static async updateBetslipOutcome(betslip: BetSlip, outcome: string) {
     try {
       const isFinalBet = await BetService.finalBetCheck(betslip);
-
-
 
       if (betslip.outcome === null) {
         if (outcome === 'L') {
@@ -483,7 +474,8 @@ class BetService {
 
   static async checkML(bet: any, score: any) {
     try {
-      if (bet.pick === bet.home) {          //home_team?
+      if (bet.pick === bet.home) {
+        //home_team?
         if (score.home > score.away) {
           return 'W';
         } else if (score.home < score.away) {
@@ -507,7 +499,7 @@ class BetService {
   }
 
   static async checkSpread(bet: any, score: any) {
-    const teamScore = bet.pick === bet.home ? score.home : score.away;          // check
+    const teamScore = bet.pick === bet.home ? score.home : score.away; // check
     const oppScore = bet.pick === bet.away ? score.away : score.home;
     const pointDiff = teamScore - oppScore; // if point diff is positive you win
 

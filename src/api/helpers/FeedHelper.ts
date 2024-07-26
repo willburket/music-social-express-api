@@ -25,8 +25,8 @@ class FeedHelper {
   //   }
   // }
 
-  static async getFollowedUsersPosts(userId: number, offset: number){
-    try{
+  static async getFollowedUsersPosts(userId: number, offset: number) {
+    try {
       const posts = await db(process.env.POST_TABLE as string)
         .join(
           `${process.env.BETSLIP_TABLE}`,
@@ -75,7 +75,7 @@ class FeedHelper {
             `),
         )
         // .where(`${process.env.POST_TABLE}.user_id`, '=', userId)
-        
+
         .where(`${process.env.FOLLOWER_TABLE}.follower_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
         .limit(3);
@@ -83,9 +83,9 @@ class FeedHelper {
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);
-      return cleanedPosts
-    }catch(error){
-      console.log('Error getting followed user posts:', error)
+      return cleanedPosts;
+    } catch (error) {
+      console.log('Error getting followed user posts:', error);
     }
   }
 }
