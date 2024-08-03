@@ -3,6 +3,7 @@ import PostService from '../services/PostService';
 import { Request, Response } from 'express';
 import CreatePost from '../interfaces/CreatePost';
 import BetService from '../services/BetService';
+import FeedHelper from '../helpers/FeedHelper';
 
 class PostController {
   async createPost(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -48,10 +49,73 @@ class PostController {
 
   async getPostsByUsername(req: AuthenticatedRequest, res: Response): Promise<void> {
     const username = req.params.username;
+    const user = req.user;
+
     try {
       const posts = await PostService.getPostsByUsername(username);
+      const fullPosts = await FeedHelper.checkLikeStatuses(user!.id, posts);
 
-      res.status(200).json(posts);
+      res.status(200).json(fullPosts);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+
+  async likePost(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+    const currentUser = req.user;
+
+    try {
+      if (currentUser) {
+        await PostService.incrementLikeCount(postId, currentUser.id);
+      }
+
+      res.status(200);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+
+  async unlikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+    const currentUser = req.user;
+
+    try {
+      if (currentUser) {
+        await PostService.decrementLikeCount(postId, currentUser.id);
+      }
+
+      res.status(200);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+
+  async dislikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+    const currentUser = req.user;
+
+    try {
+      if (currentUser) {
+        await PostService.incrementDislikeCount(postId, currentUser.id);
+      }
+
+      res.status(200);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+
+  async undislikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+    const currentUser = req.user;
+
+    try {
+      if (currentUser) {
+        await PostService.decrementDislikeCount(postId, currentUser.id);
+      }
+
+      res.status(200);
     } catch (error) {
       res.status(500).json(error);
     }

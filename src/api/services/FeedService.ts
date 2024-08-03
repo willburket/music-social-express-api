@@ -5,8 +5,10 @@ class FeedService {
   static async getFeed(id: number, offset: number) {
     try {
       const followedFeed = await FeedHelper.getFollowedUsersPosts(id, offset);
-      console.log(followedFeed);
-      return followedFeed;
+
+      const finalFeed = await FeedHelper.checkLikeStatuses(id, followedFeed);
+      console.log(finalFeed);
+      return finalFeed;
     } catch (error) {
       console.log('Error fetching user:', error);
     }

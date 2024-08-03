@@ -15,6 +15,6 @@ CREATE TABLE Tweets (
 );
 
 DELETE FROM Tweets
-WHERE id >= 21;
+WHERE id = 25;
 
 SELECT * FROM Tweets;

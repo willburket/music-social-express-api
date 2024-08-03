@@ -15,6 +15,8 @@ router.post('/auth', UserController.authorizeUser);
 router.post('/signup', UserController.createUser);
 router.get('/followers/:id', authenticateJWT, UserController.getFollowers);
 router.get('/following/:id', authenticateJWT, UserController.getFollowing);
+router.get('/likes/:id', authenticateJWT, UserController.getLikedPosts);
+router.get('/dislikes/:id', authenticateJWT, UserController.getDislikedPosts);
 
 // follow
 router.post('/follow/:id', authenticateJWT, UserController.followUser);
@@ -25,6 +27,10 @@ router.delete('/follow/:id', authenticateJWT, UserController.unfollowUser);
 router.post('/posts', authenticateJWT, PostController.createPost);
 router.get('/posts/:id', authenticateJWT, PostController.getUserPosts);
 router.get('/user-posts/:username', authenticateJWT, PostController.getPostsByUsername);
+router.post('/posts/likes/:id', authenticateJWT, PostController.likePost);
+router.delete('/posts/likes/:id', authenticateJWT, PostController.unlikePost);
+router.post('/posts/dislikes/:id', authenticateJWT, PostController.dislikePost);
+router.delete('/posts/dislikes/:id', authenticateJWT, PostController.undislikePost);
 
 //feed
 router.get('/feed', authenticateJWT, FeedController.getFeed);

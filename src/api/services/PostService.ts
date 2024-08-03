@@ -1,5 +1,7 @@
 import db from '../../config/database';
 import CreatePost from '../interfaces/CreatePost';
+const fs = require('fs');
+const path = require('path');
 
 class PostService {
   static async createPost(post: CreatePost) {
@@ -111,6 +113,80 @@ class PostService {
       };
     });
     return cleanedPosts;
+  }
+
+  static async incrementLikeCount(postId: number, userId: number) {
+    try {
+      const filePath = path.join(__dirname, '../scripts/incrementLikes.sql');
+      const sqlQuery = await fs.readFileSync(filePath, 'utf-8');
+      const [transQuery, updateQuery, insertQuery, commitQuery] = sqlQuery.split(';').map((query: any) => query.trim());
+
+      // can we not use a promise.all on the middle two?
+      await db.raw(transQuery);
+      await db.raw(updateQuery, [postId]);
+      await db.raw(insertQuery, [userId, postId]);
+      await db.raw(commitQuery);
+      return;
+    } catch (error) {
+      console.log('Failed to increment likes: ', error);
+      throw error;
+    }
+  }
+
+  static async decrementLikeCount(postId: number, userId: number) {
+    try {
+      const filePath = path.join(__dirname, '../scripts/decrementLikes.sql');
+      const sqlQuery = await fs.readFileSync(filePath, 'utf-8');
+      const [transQuery, updateQuery, deleteQuery, commitQuery] = sqlQuery.split(';').map((query: any) => query.trim());
+
+      // can we not use a promise.all on the middle two?
+      await db.raw(transQuery);
+      await db.raw(updateQuery, [postId]);
+      await db.raw(deleteQuery, [userId, postId]);
+      await db.raw(commitQuery);
+
+      return;
+    } catch (error) {
+      console.log('Failed to decrement likes: ', error);
+      throw error;
+    }
+  }
+
+  static async incrementDislikeCount(postId: number, userId: number) {
+    try {
+      const filePath = path.join(__dirname, '../scripts/incrementDislikes.sql');
+      const sqlQuery = await fs.readFileSync(filePath, 'utf-8');
+      const [transQuery, updateQuery, insertQuery, commitQuery] = sqlQuery.split(';').map((query: any) => query.trim());
+
+      // can we not use a promise.all on the middle two?
+      await db.raw(transQuery);
+      await db.raw(updateQuery, [postId]);
+      await db.raw(insertQuery, [userId, postId]);
+      await db.raw(commitQuery);
+      return;
+    } catch (error) {
+      console.log('Failed to increment dislikes: ', error);
+      throw error;
+    }
+  }
+
+  static async decrementDislikeCount(postId: number, userId: number) {
+    try {
+      const filePath = path.join(__dirname, '../scripts/decrementDislikes.sql');
+      const sqlQuery = await fs.readFileSync(filePath, 'utf-8');
+      const [transQuery, updateQuery, deleteQuery, commitQuery] = sqlQuery.split(';').map((query: any) => query.trim());
+
+      // can we not use a promise.all on the middle two?
+      await db.raw(transQuery);
+      await db.raw(updateQuery, [postId]);
+      await db.raw(deleteQuery, [userId, postId]);
+      await db.raw(commitQuery);
+
+      return;
+    } catch (error) {
+      console.log('Failed to decrement dislikes: ', error);
+      throw error;
+    }
   }
 }
 

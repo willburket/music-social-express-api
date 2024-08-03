@@ -96,6 +96,34 @@ class UserController {
       res.status(500).json(error);
     }
   }
+  async getLikedPosts(req: AuthenticatedRequest, res: Response): Promise<void> {
+    // const currentUser = req.user?.id;
+    const id = req.params.id;
+    const idNum: number = parseInt(id, 10);
+
+    try {
+      // if(currentUser){
+      const following = await UserService.getLikedPosts(idNum);
+      // }
+      res.status(200).json(following);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+  async getDislikedPosts(req: AuthenticatedRequest, res: Response): Promise<void> {
+    // const currentUser = req.user?.id;
+    const id = req.params.id;
+    const idNum: number = parseInt(id, 10);
+
+    try {
+      // if(currentUser){
+      const following = await UserService.getDislikedPosts(idNum);
+      // }
+      res.status(200).json(following);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
 }
 
 export default new UserController();

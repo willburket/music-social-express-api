@@ -6,6 +6,7 @@ import SignUpUser from '../interfaces/SignUpUser';
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import FeedHelper from '../helpers/FeedHelper';
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ class UserService {
   static async getUser(username: string) {
     try {
       const res = await db(process.env.USER_TABLE as string)
-        .select('id', 'username', 'first_name', 'last_name', 'following_count', 'follower_count', 'bio')
+        .select('id', 'username', 'first_name', 'last_name', 'following_count', 'follower_count', 'bio', 'winnings')
         .where('username', username);
       return res;
     } catch (error) {
@@ -155,6 +156,24 @@ class UserService {
 
   static async updateWinnings(userId: number, payout: number) {
     // add/subtract units from total winnings
+  }
+
+  static async getLikedPosts(userId: number) {
+    try {
+      const likedPosts = await FeedHelper.getLikedPosts(userId);
+      return likedPosts;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async getDislikedPosts(userId: number) {
+    try {
+      const dislikedPosts = await FeedHelper.getDislikedPosts(userId);
+      return dislikedPosts;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
