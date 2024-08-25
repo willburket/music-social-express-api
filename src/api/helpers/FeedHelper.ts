@@ -55,8 +55,8 @@ class FeedHelper {
 
         .where(`${process.env.FOLLOWER_TABLE}.follower_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3);
-      // .offset(offset);
+        .limit(3)
+        .offset(offset);
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);
@@ -138,8 +138,8 @@ class FeedHelper {
 
         .where(`${process.env.LIKES_TABLE}.user_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3);
-      // .offset(offset);
+        .limit(3)
+        // .offset(offset);
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);

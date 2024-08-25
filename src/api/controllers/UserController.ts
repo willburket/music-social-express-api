@@ -124,6 +124,31 @@ class UserController {
       res.status(500).json(error);
     }
   }
+
+  async editProfile(req: AuthenticatedRequest, res: Response): Promise<void>{
+    const id = req.params.id;
+    const idNum: number = parseInt(id, 10);
+    const newData = req.body
+    const user = req.user?.id
+    let token;
+
+    const userObj = {
+      first_name: newData.firstName,
+      last_name: newData.lastName,
+      username: newData.username,
+      bio: newData.bio
+    }
+    
+    try {
+      if(user){
+        token = await UserService.editProfile(user, userObj);
+      }
+
+      res.status(200).json(token);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
 }
 
 export default new UserController();

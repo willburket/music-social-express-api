@@ -144,7 +144,6 @@ class PostService {
       await db.raw(updateQuery, [postId]);
       await db.raw(deleteQuery, [userId, postId]);
       await db.raw(commitQuery);
-
       return;
     } catch (error) {
       console.log('Failed to decrement likes: ', error);

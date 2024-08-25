@@ -1,6 +1,6 @@
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
 import PostService from '../services/PostService';
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import CreatePost from '../interfaces/CreatePost';
 import BetService from '../services/BetService';
 import FeedHelper from '../helpers/FeedHelper';
@@ -64,13 +64,14 @@ class PostController {
   async likePost(req: AuthenticatedRequest, res: Response): Promise<void> {
     const postId = Number(req.params.id);
     const currentUser = req.user;
+    
 
     try {
       if (currentUser) {
         await PostService.incrementLikeCount(postId, currentUser.id);
       }
 
-      res.status(200);
+      res.status(200).json({ message: "Success" });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -79,13 +80,14 @@ class PostController {
   async unlikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
     const postId = Number(req.params.id);
     const currentUser = req.user;
+    
 
     try {
       if (currentUser) {
         await PostService.decrementLikeCount(postId, currentUser.id);
       }
 
-      res.status(200);
+      res.status(200).json({ message: "Success" });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -100,7 +102,7 @@ class PostController {
         await PostService.incrementDislikeCount(postId, currentUser.id);
       }
 
-      res.status(200);
+      res.status(200).json({ message: "Success" });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -115,7 +117,7 @@ class PostController {
         await PostService.decrementDislikeCount(postId, currentUser.id);
       }
 
-      res.status(200);
+      res.status(200).json({ message: "Success" });
     } catch (error) {
       res.status(500).json(error);
     }

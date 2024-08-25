@@ -34,7 +34,7 @@ class UserService {
         return;
       }
       const payload = { id: res[0].id, username: res[0].username };
-      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '30m' });
+      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });   //update
       return token;
     } catch (error) {
       console.log('Error checking user:', error);
@@ -173,6 +173,21 @@ class UserService {
       return dislikedPosts;
     } catch (error) {
       throw error;
+    }
+  }
+
+  static async editProfile(userId: number, newData: any){
+    try{
+      await db(process.env.USER_TABLE as string)
+      .where({id: userId})
+      .update(newData)
+
+      const payload = { id: userId, username: newData.username};
+      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
+      return token
+    }catch(error){
+      console.log("edit prof:", error)
+      throw error
     }
   }
 }
