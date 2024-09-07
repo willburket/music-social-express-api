@@ -46,7 +46,10 @@ class PostService {
     }
   }
 
-  static async getPostsByUsername(username: string) {
+  static async getPostsByUsername(username: string, page: number) {
+
+    const offset = 3*page;
+
     try {
       const posts = await db(process.env.POST_TABLE as string)
         .join(
@@ -90,8 +93,8 @@ class PostService {
         )
         .where(`${process.env.POST_TABLE}.username`, '=', username)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3);
-      // .offset(offset);
+        .limit(3)
+        .offset(offset);
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);

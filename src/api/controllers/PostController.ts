@@ -39,7 +39,10 @@ class PostController {
   async getUserPosts(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const id = req.params.id;
+      // const page = req.query.page;
       const idNum: number = parseInt(id, 10);
+      // const offset: number = parseInt(page, 10)
+
       const posts = await PostService.getUserPosts(idNum);
       res.status(200).json(posts);
     } catch (error) {
@@ -51,8 +54,11 @@ class PostController {
     const username = req.params.username;
     const user = req.user;
 
+    const page = req.query.page;
+    const pageNum: number = parseInt(page as string, 10);
+
     try {
-      const posts = await PostService.getPostsByUsername(username);
+      const posts = await PostService.getPostsByUsername(username, pageNum);
       const fullPosts = await FeedHelper.checkLikeStatuses(user!.id, posts);
 
       res.status(200).json(fullPosts);

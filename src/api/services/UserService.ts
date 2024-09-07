@@ -158,18 +158,18 @@ class UserService {
     // add/subtract units from total winnings
   }
 
-  static async getLikedPosts(userId: number) {
+  static async getLikedPosts(userId: number, page: number) {
     try {
-      const likedPosts = await FeedHelper.getLikedPosts(userId);
+      const likedPosts = await FeedHelper.getLikedPosts(userId, page);
       return likedPosts;
     } catch (error) {
       throw error;
     }
   }
 
-  static async getDislikedPosts(userId: number) {
+  static async getDislikedPosts(userId: number, page: number) {
     try {
-      const dislikedPosts = await FeedHelper.getDislikedPosts(userId);
+      const dislikedPosts = await FeedHelper.getDislikedPosts(userId, page);
       return dislikedPosts;
     } catch (error) {
       throw error;

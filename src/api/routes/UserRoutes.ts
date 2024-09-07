@@ -19,8 +19,6 @@ router.get('/likes/:id', authenticateJWT, UserController.getLikedPosts);
 router.get('/dislikes/:id', authenticateJWT, UserController.getDislikedPosts);
 router.post('/profile/:id', authenticateJWT, UserController.editProfile);
 
-
-
 // follow
 router.post('/follow/:id', authenticateJWT, UserController.followUser);
 router.get('/follow/:id', authenticateJWT, UserController.getFollowStatus);

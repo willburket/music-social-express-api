@@ -2,7 +2,10 @@ import db from '../../config/database';
 import PostService from '../services/PostService';
 
 class FeedHelper {
-  static async getFollowedUsersPosts(userId: number, offset: number) {
+  static async getFollowedUsersPosts(userId: number, page: number) {
+    const postCount = 3;
+    const offset = page*postCount
+
     try {
       const posts = await db(process.env.POST_TABLE as string)
         .join(
@@ -55,7 +58,7 @@ class FeedHelper {
 
         .where(`${process.env.FOLLOWER_TABLE}.follower_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3)
+        .limit(postCount)
         .offset(offset);
 
       //clean betslips
@@ -90,7 +93,10 @@ class FeedHelper {
     }
   }
 
-  static async getLikedPosts(userId: number) {
+  static async getLikedPosts(userId: number, page: number) {
+    const postCount = 3;
+    const offset = postCount*page;
+
     try {
       const posts = await db(process.env.POST_TABLE as string)
         .join(
@@ -138,8 +144,8 @@ class FeedHelper {
 
         .where(`${process.env.LIKES_TABLE}.user_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3)
-        // .offset(offset);
+        .limit(postCount)
+        .offset(offset);
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);
@@ -155,7 +161,12 @@ class FeedHelper {
     }
   }
 
-  static async getDislikedPosts(userId: number) {
+  static async getDislikedPosts(userId: number, page: number) {
+
+    const postCount = 3;
+    const offset = postCount*page;
+
+
     try {
       const posts = await db(process.env.POST_TABLE as string)
         .join(
@@ -208,8 +219,8 @@ class FeedHelper {
 
         .where(`${process.env.DISLIKES_TABLE}.user_id`, '=', userId)
         .orderBy(`${process.env.POST_TABLE}.created`, 'desc')
-        .limit(3);
-      // .offset(offset);
+        .limit(postCount)
+        .offset(offset);
 
       //clean betslips
       const cleanedPosts = await PostService.cleanBetslips(posts);

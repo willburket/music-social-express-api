@@ -100,10 +100,14 @@ class UserController {
     // const currentUser = req.user?.id;
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
+    const page = req.query.page;
+    const pageNum: number = parseInt(page as string, 10);
+
+
 
     try {
       // if(currentUser){
-      const following = await UserService.getLikedPosts(idNum);
+      const following = await UserService.getLikedPosts(idNum, pageNum);
       // }
       res.status(200).json(following);
     } catch (error) {
@@ -114,10 +118,12 @@ class UserController {
     // const currentUser = req.user?.id;
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
+    const page = req.query.page;
+    const pageNum: number = parseInt(page as string, 10);
 
     try {
       // if(currentUser){
-      const following = await UserService.getDislikedPosts(idNum);
+      const following = await UserService.getDislikedPosts(idNum, pageNum);
       // }
       res.status(200).json(following);
     } catch (error) {
