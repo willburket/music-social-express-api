@@ -79,8 +79,11 @@ class UserController {
   async getFollowers(req: AuthenticatedRequest, res: Response): Promise<void> {
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
+    const page = req.query.page;
+    const pageNum: number = parseInt(page as string, 10);
+
     try {
-      const followers = await UserService.getFollowers(idNum);
+      const followers = await UserService.getFollowers(idNum, pageNum);
       res.status(200).json(followers);
     } catch (error) {
       res.status(500).json(error);
@@ -89,8 +92,11 @@ class UserController {
   async getFollowing(req: AuthenticatedRequest, res: Response): Promise<void> {
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
+    const page = req.query.page;
+    const pageNum: number = parseInt(page as string, 10);
+
     try {
-      const following = await UserService.getFollowing(idNum);
+      const following = await UserService.getFollowing(idNum, pageNum);
       res.status(200).json(following);
     } catch (error) {
       res.status(500).json(error);

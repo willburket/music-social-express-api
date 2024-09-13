@@ -118,17 +118,20 @@ class UserService {
     }
   }
 
-  static async getFollowers(userId: number) {
+  static async getFollowers(userId: number, page: number) {
+    const itemCount = 10
+    const offset = page*itemCount
+
     try {
       const followers = await db(process.env.FOLLOWER_TABLE as string)
         .select('follower_id')
         .where({ followee_id: userId });
       const followerIds = followers.map((obj) => obj.follower_id);
-      const followerObjects = await db(process.env.USER_TABLE as string) //maybe cache later?
+      const followerObjects = await db(process.env.USER_TABLE as string) 
         .select('id', 'first_name', 'last_name', 'bio', 'username')
         .whereIn('id', followerIds)
-        .limit(1)
-        .offset(1); // update later
+        .limit(itemCount)
+        .offset(offset); 
 
       return followerObjects;
     } catch (error) {
@@ -136,17 +139,20 @@ class UserService {
     }
   }
 
-  static async getFollowing(userId: number) {
+  static async getFollowing(userId: number, page: number) {
+    const itemCount = 10
+    const offset = page*itemCount
+
     try {
       const following = await db(process.env.FOLLOWER_TABLE as string)
         .select('followee_id')
         .where({ follower_id: userId });
       const followingIds = following.map((obj) => obj.followee_id);
-      const followingObjects = await db(process.env.USER_TABLE as string) //maybe cache later?
+      const followingObjects = await db(process.env.USER_TABLE as string) 
         .select('id', 'first_name', 'last_name', 'bio', 'username')
         .whereIn('id', followingIds)
-        .limit(1)
-        .offset(1); // update later
+        .limit(itemCount)
+        .offset(offset); 
 
       return followingObjects;
     } catch (error) {
