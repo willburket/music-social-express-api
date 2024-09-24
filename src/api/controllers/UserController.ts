@@ -4,6 +4,7 @@ import AuthUser from '../interfaces/AuthUser';
 import SignUpUser from '../interfaces/SignUpUser';
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
 import { stat } from 'fs';
+import NotificationController from './NotificationController';
 
 class UserController {
   async getUser(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -59,6 +60,7 @@ class UserController {
     try {
       UserService.followUser(currentUser as number, followedUserId);
       res.status(200);
+      await NotificationController.createFollowNoti(followedUserId, req.user);
     } catch (error) {
       res.status(500).json(error);
     }
@@ -109,8 +111,6 @@ class UserController {
     const page = req.query.page;
     const pageNum: number = parseInt(page as string, 10);
 
-
-
     try {
       // if(currentUser){
       const following = await UserService.getLikedPosts(idNum, pageNum);
@@ -137,22 +137,22 @@ class UserController {
     }
   }
 
-  async editProfile(req: AuthenticatedRequest, res: Response): Promise<void>{
+  async editProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
-    const newData = req.body
-    const user = req.user?.id
+    const newData = req.body;
+    const user = req.user?.id;
     let token;
 
     const userObj = {
       first_name: newData.firstName,
       last_name: newData.lastName,
       username: newData.username,
-      bio: newData.bio
-    }
-    
+      bio: newData.bio,
+    };
+
     try {
-      if(user){
+      if (user) {
         token = await UserService.editProfile(user, userObj);
       }
 

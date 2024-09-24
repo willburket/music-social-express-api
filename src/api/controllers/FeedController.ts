@@ -8,7 +8,6 @@ class FeedController {
     const page = req.query.page;
     const pageNum: number = parseInt(page as string, 10);
     try {
-      console.log('Page:', page);
       const feed = await FeedService.getFeed(id as number, pageNum);
       res.status(200).json(feed);
     } catch (error) {

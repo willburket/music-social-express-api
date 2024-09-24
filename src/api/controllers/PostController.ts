@@ -1,9 +1,10 @@
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
 import PostService from '../services/PostService';
-import { Request, response, Response } from 'express';
+import { Response } from 'express';
 import CreatePost from '../interfaces/CreatePost';
 import BetService from '../services/BetService';
 import FeedHelper from '../helpers/FeedHelper';
+import NotificationController from './NotificationController';
 
 class PostController {
   async createPost(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -23,7 +24,6 @@ class PostController {
         };
 
         const betslip = await BetService.createBetslip(currentUser, req.body);
-        console.log('Betslip id:', betslip);
 
         if (betslip) {
           post.betslip = betslip;
@@ -70,14 +70,14 @@ class PostController {
   async likePost(req: AuthenticatedRequest, res: Response): Promise<void> {
     const postId = Number(req.params.id);
     const currentUser = req.user;
-    
 
     try {
       if (currentUser) {
         await PostService.incrementLikeCount(postId, currentUser.id);
       }
 
-      res.status(200).json({ message: "Success" });
+      res.status(200).json({ message: 'Success' });
+      await NotificationController.createInteractionNoti(currentUser, 'like', postId);
     } catch (error) {
       res.status(500).json(error);
     }
@@ -86,14 +86,13 @@ class PostController {
   async unlikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
     const postId = Number(req.params.id);
     const currentUser = req.user;
-    
 
     try {
       if (currentUser) {
         await PostService.decrementLikeCount(postId, currentUser.id);
       }
 
-      res.status(200).json({ message: "Success" });
+      res.status(200).json({ message: 'Success' });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -108,7 +107,7 @@ class PostController {
         await PostService.incrementDislikeCount(postId, currentUser.id);
       }
 
-      res.status(200).json({ message: "Success" });
+      res.status(200).json({ message: 'Success' });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -123,7 +122,7 @@ class PostController {
         await PostService.decrementDislikeCount(postId, currentUser.id);
       }
 
-      res.status(200).json({ message: "Success" });
+      res.status(200).json({ message: 'Success' });
     } catch (error) {
       res.status(500).json(error);
     }

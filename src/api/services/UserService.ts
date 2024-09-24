@@ -34,7 +34,7 @@ class UserService {
         return;
       }
       const payload = { id: res[0].id, username: res[0].username };
-      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });   //update
+      const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' }); //update
       return token;
     } catch (error) {
       console.log('Error checking user:', error);
@@ -119,19 +119,19 @@ class UserService {
   }
 
   static async getFollowers(userId: number, page: number) {
-    const itemCount = 10
-    const offset = page*itemCount
+    const itemCount = 10;
+    const offset = page * itemCount;
 
     try {
       const followers = await db(process.env.FOLLOWER_TABLE as string)
         .select('follower_id')
         .where({ followee_id: userId });
       const followerIds = followers.map((obj) => obj.follower_id);
-      const followerObjects = await db(process.env.USER_TABLE as string) 
+      const followerObjects = await db(process.env.USER_TABLE as string)
         .select('id', 'first_name', 'last_name', 'bio', 'username')
         .whereIn('id', followerIds)
         .limit(itemCount)
-        .offset(offset); 
+        .offset(offset);
 
       return followerObjects;
     } catch (error) {
@@ -140,19 +140,19 @@ class UserService {
   }
 
   static async getFollowing(userId: number, page: number) {
-    const itemCount = 10
-    const offset = page*itemCount
+    const itemCount = 10;
+    const offset = page * itemCount;
 
     try {
       const following = await db(process.env.FOLLOWER_TABLE as string)
         .select('followee_id')
         .where({ follower_id: userId });
       const followingIds = following.map((obj) => obj.followee_id);
-      const followingObjects = await db(process.env.USER_TABLE as string) 
+      const followingObjects = await db(process.env.USER_TABLE as string)
         .select('id', 'first_name', 'last_name', 'bio', 'username')
         .whereIn('id', followingIds)
         .limit(itemCount)
-        .offset(offset); 
+        .offset(offset);
 
       return followingObjects;
     } catch (error) {
@@ -182,18 +182,18 @@ class UserService {
     }
   }
 
-  static async editProfile(userId: number, newData: any){
-    try{
+  static async editProfile(userId: number, newData: any) {
+    try {
       await db(process.env.USER_TABLE as string)
-      .where({id: userId})
-      .update(newData)
+        .where({ id: userId })
+        .update(newData);
 
-      const payload = { id: userId, username: newData.username};
+      const payload = { id: userId, username: newData.username };
       const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
-      return token
-    }catch(error){
-      console.log("edit prof:", error)
-      throw error
+      return token;
+    } catch (error) {
+      console.log('edit prof:', error);
+      throw error;
     }
   }
 }

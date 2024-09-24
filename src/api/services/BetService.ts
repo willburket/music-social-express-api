@@ -296,7 +296,7 @@ class BetService {
     try {
       // schedule getOutcome duration of hours after game starts
       const gameOutcome = await schedule.scheduleJob(checkTime, () => BetService.getOutcome(dBevent, eventId));
-      console.log('Check scheduled');
+
       if (!gameOutcome) {
         // if games not finished check again in 15 min
         await BetService.rescheduleCheck(eventId, dBevent);

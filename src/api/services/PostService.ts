@@ -1,4 +1,6 @@
 import db from '../../config/database';
+import BetController from '../controllers/BetController';
+import NotificationController from '../controllers/NotificationController';
 import CreatePost from '../interfaces/CreatePost';
 const fs = require('fs');
 const path = require('path');
@@ -17,14 +19,17 @@ class PostService {
       };
 
       const res = await db(process.env.POST_TABLE as string).insert(dbPost);
+      //check what the response is here!
       const postId = res[0];
+
+      // why am I doing this?
       const postObject = await db(process.env.POST_TABLE as string)
         .where({ id: postId })
         .select('*');
 
       return postObject[0];
     } catch (error) {
-      console.log('Error saving user:', error);
+      console.log('Error creating post:', error);
       return;
     }
   }
@@ -47,8 +52,7 @@ class PostService {
   }
 
   static async getPostsByUsername(username: string, page: number) {
-
-    const offset = 3*page;
+    const offset = 3 * page;
 
     try {
       const posts = await db(process.env.POST_TABLE as string)
@@ -129,6 +133,7 @@ class PostService {
       await db.raw(updateQuery, [postId]);
       await db.raw(insertQuery, [userId, postId]);
       await db.raw(commitQuery);
+
       return;
     } catch (error) {
       console.log('Failed to increment likes: ', error);
@@ -147,6 +152,7 @@ class PostService {
       await db.raw(updateQuery, [postId]);
       await db.raw(deleteQuery, [userId, postId]);
       await db.raw(commitQuery);
+      //
       return;
     } catch (error) {
       console.log('Failed to decrement likes: ', error);

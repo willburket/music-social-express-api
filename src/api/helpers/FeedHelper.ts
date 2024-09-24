@@ -4,7 +4,7 @@ import PostService from '../services/PostService';
 class FeedHelper {
   static async getFollowedUsersPosts(userId: number, page: number) {
     const postCount = 3;
-    const offset = page*postCount
+    const offset = page * postCount;
 
     try {
       const posts = await db(process.env.POST_TABLE as string)
@@ -82,6 +82,22 @@ class FeedHelper {
       const dislikedPostIds = new Set(dislikedPosts.map((dislike) => dislike.post_id));
 
       postArray.forEach((post) => {
+        post.id = post.post_id;
+        post.userId = post.user_id;
+        post.username = post.username;
+        post.content = post.post_content;
+        post.reply = post.reply;
+        post.replyTo = post.reply_to;
+        post.likeCount = post.like_count;
+        post.dislikeCount = post.dislike_count;
+        post.repostCount = post.repost_count;
+        post.date = post.created_at;
+        post.betslipId = post.betslip_id;
+        post.odds = post.odds;
+        post.wager = post.wager;
+        post.payout = post.payout;
+        post.outcome = post.outcome;
+        post.bets = post.bets_data;
         post.liked = likedPostIds.has(post.post_id);
         post.disliked = dislikedPostIds.has(post.post_id);
       });
@@ -95,7 +111,7 @@ class FeedHelper {
 
   static async getLikedPosts(userId: number, page: number) {
     const postCount = 3;
-    const offset = postCount*page;
+    const offset = postCount * page;
 
     try {
       const posts = await db(process.env.POST_TABLE as string)
@@ -162,10 +178,8 @@ class FeedHelper {
   }
 
   static async getDislikedPosts(userId: number, page: number) {
-
     const postCount = 3;
-    const offset = postCount*page;
-
+    const offset = postCount * page;
 
     try {
       const posts = await db(process.env.POST_TABLE as string)

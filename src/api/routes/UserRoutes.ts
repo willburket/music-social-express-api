@@ -5,6 +5,7 @@ import FeedController from '../controllers/FeedController';
 import { authenticateJWT } from '../middlewares/Authenticate';
 import BetController from '../controllers/BetController';
 import LeaderboardController from '../controllers/LeaderboardController';
+import NotificationController from '../controllers/NotificationController';
 
 const router: Router = express.Router();
 router.use(express.json());
@@ -38,6 +39,12 @@ router.get('/feed', authenticateJWT, FeedController.getFeed);
 
 //betting
 router.get('/scores', BetController.getScore);
+// router.get('/games', BetController.getGames);
+// router.get('/outcome', BetController.getOutcome);
+
+// notifications
+router.get('/notifications', authenticateJWT, NotificationController.getNotifications);
+router.post('/notifications', authenticateJWT, NotificationController.setReadStatus);
 
 //leaderboards
 router.get('/leaderboards/:type', authenticateJWT, LeaderboardController.getLeaderboard);

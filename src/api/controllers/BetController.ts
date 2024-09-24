@@ -18,7 +18,19 @@ class BetController {
       res.status(200).json();
     } catch (error) {
       res.status(500).json(error);
-      console.log(error);
+    }
+  }
+
+  async getGames(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+  async getOutcome(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+    } catch (error) {
+      res.status(500).json(error);
     }
   }
 }
