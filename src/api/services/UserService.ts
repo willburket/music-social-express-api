@@ -123,6 +123,7 @@ class UserService {
     const offset = page * itemCount;
 
     try {
+      // this needs to be fixed
       const followers = await db(process.env.FOLLOWER_TABLE as string)
         .select('follower_id')
         .where({ followee_id: userId });

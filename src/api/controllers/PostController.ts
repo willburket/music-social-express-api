@@ -127,6 +127,28 @@ class PostController {
       res.status(500).json(error);
     }
   }
+
+  async getPostLikes(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+
+    try {
+      const users = await PostService.getLikers(postId);
+      res.status(200).json(users);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
+
+  async getPostDislikes(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const postId = Number(req.params.id);
+
+    try {
+      const users = await PostService.getDislikers(postId);
+      res.status(200).json(users);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }
 }
 
 export default new PostController();

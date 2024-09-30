@@ -33,6 +33,8 @@ router.post('/posts/likes/:id', authenticateJWT, PostController.likePost);
 router.delete('/posts/likes/:id', authenticateJWT, PostController.unlikePost);
 router.post('/posts/dislikes/:id', authenticateJWT, PostController.dislikePost);
 router.delete('/posts/dislikes/:id', authenticateJWT, PostController.undislikePost);
+router.get('/posts/:id/likes', authenticateJWT, PostController.getPostLikes);
+router.get('/posts/:id/dislikes', authenticateJWT, PostController.getPostDislikes);
 
 //feed
 router.get('/feed', authenticateJWT, FeedController.getFeed);

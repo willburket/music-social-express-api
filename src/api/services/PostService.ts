@@ -196,6 +196,34 @@ class PostService {
       throw error;
     }
   }
+
+  static async getLikers(postId: number) {
+    try {
+      const likers = await db(process.env.USER_TABLE as string)
+        .join(process.env.LIKES_TABLE as string, 'Users.id', 'Likes.user_id')
+        .where('Likes.post_id', postId)
+        .select('Users.id', 'Users.first_name', 'Users.last_name', 'Users.username', 'Users.profile_pic')
+        .limit(25);
+      return likers;
+    } catch (error) {
+      console.log('Failed to get post likers: ', error);
+      throw error;
+    }
+  }
+
+  static async getDislikers(postId: number) {
+    try {
+      const dislikers = await db(process.env.USER_TABLE as string)
+        .join(process.env.DISLIKES_TABLE as string, 'Users.id', 'Dislikes.user_id')
+        .where('Dislikes.post_id', postId)
+        .select('Users.id', 'Users.first_name', 'Users.last_name', 'Users.username', 'Users.profile_pic')
+        .limit(25);
+      return dislikers;
+    } catch (error) {
+      console.log('Failed to get post dislikers: ', error);
+      throw error;
+    }
+  }
 }
 
 export default PostService;
