@@ -197,6 +197,24 @@ class UserService {
       throw error;
     }
   }
+
+  static async getProfilePic(userId: number){
+    try{
+
+    }catch(error){
+      console.log("Error getting profile pic: ", error)
+      throw error;
+    }
+  }
+
+  static async getFeedProfilePics(feed: any[]){
+    try{
+
+    }catch(error){
+      console.log("Error getting feed profile pics: ", error)
+      throw error;
+    }
+  }
 }
 
 export default UserService;
