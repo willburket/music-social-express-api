@@ -309,6 +309,7 @@ class BetService {
   static async rescheduleCheck(eventId: number, dBevent: any) {
     const fifteenMinutes = new Date(Date.now() + 15 * 60 * 1000);
     const gameOutcome = await schedule.scheduleJob(fifteenMinutes, () => BetService.getOutcome(dBevent, eventId));
+    console.log("Rescheduling check")
 
     if (!gameOutcome) {
       await BetService.rescheduleCheck(eventId, dBevent);

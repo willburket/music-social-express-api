@@ -18,7 +18,7 @@ class NotiService {
         post_id: post,
       };
 
-      const res = await db(process.env.NOTIFICATION_TABLE as string).insert(noti);
+      const res = await db("Notifications").insert(noti);     // not using env var here bc ec2 instance acting funny
       await NotiService.deleteOldNotis(postData.user_id);
       return;
     } catch (error) {
@@ -41,7 +41,7 @@ class NotiService {
         noti_type: 'follow',
       };
 
-      const res = await db(process.env.NOTIFICATION_TABLE as string).insert(noti);
+      const res = await db("Notifications").insert(noti);
 
       return;
     } catch (error) {
@@ -52,7 +52,7 @@ class NotiService {
 
   static async getNotis(user: any) {
     try {
-      const data = await db(process.env.NOTIFICATION_TABLE)
+      const data = await db("Notifications")
         .select('*')
         .where('user_id', '=', user.id)
         .orderBy('created', 'desc');
@@ -161,7 +161,7 @@ class NotiService {
 
   static async setReadStatus(user: any) {
     try {
-      await db(process.env.NOTIFICATION_TABLE as string)
+      await db("Notifications")
         .where({ user_id: user.id })
         .update({ is_read: true });
       return;
@@ -173,14 +173,14 @@ class NotiService {
 
   static async deleteOldNotis(userId: any) {
     try {
-      const overflow = await db(process.env.NOTIFICATION_TABLE as string)
+      const overflow = await db("Notifications")
         .where({ user_id: userId })
         .orderBy('created', 'desc') // assuming the `created_at` field orders the notifications
         .offset(10) // skip the first 25 most recent notifications
         .pluck('id'); // get the IDs of the remaining notifications
 
       if (overflow.length > 0) {
-        await db(process.env.NOTIFICATION_TABLE as string)
+        await db("Notifications")
           .whereIn('id', overflow)
           .del();
       }

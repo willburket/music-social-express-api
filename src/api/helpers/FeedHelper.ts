@@ -1,5 +1,6 @@
 import db from '../../config/database';
 import PostService from '../services/PostService';
+import UserService from '../services/UserService';
 
 class FeedHelper {
   static async getFollowedUsersPosts(userId: number, page: number) {
@@ -27,6 +28,7 @@ class FeedHelper {
         .leftJoin(`${process.env.BET_TABLE} as bet4`, 'Betslips.bet_4_id', 'bet4.id')
         .leftJoin(`${process.env.BET_TABLE} as bet5`, 'Betslips.bet_5_id', 'bet5.id')
         .select(
+          'Users.profile_pic as profile_pic',
           'Tweets.id as post_id',
           'Tweets.user_id as user_id',
           'Tweets.username as username',
@@ -62,7 +64,8 @@ class FeedHelper {
         .offset(offset);
 
       //clean betslips
-      const cleanedPosts = await PostService.cleanBetslips(posts);
+      const cleanedPosts = await PostService.cleanBetslips(posts);    // add profile pics from s3 here? 
+      
       return cleanedPosts;
     } catch (error) {
       console.log('Error getting followed user posts:', error);
@@ -100,6 +103,7 @@ class FeedHelper {
         post.bets = post.bets_data;
         post.liked = likedPostIds.has(post.post_id);
         post.disliked = dislikedPostIds.has(post.post_id);
+        
       });
 
       return postArray;
@@ -145,6 +149,7 @@ class FeedHelper {
           'Betslips.odds as odds',
           'Betslips.payout as payout',
           'Betslips.outcome as outcome',
+          'Users.profile_pic as profile_pic',
 
           db.raw(`
             JSON_ARRAY(
@@ -218,6 +223,7 @@ class FeedHelper {
           'Betslips.odds as odds',
           'Betslips.payout as payout',
           'Betslips.outcome as outcome',
+          'Users.profile_pic as profile_pic',
 
           db.raw(`
             JSON_ARRAY(
@@ -247,6 +253,22 @@ class FeedHelper {
       return cleanedPosts;
     } catch (error) {
       console.log('Error getting liked posts:', error);
+    }
+  }
+
+  static async getProfilePics(feed: any[]){
+    let updatedFeed = feed
+
+    try{
+      for(let x = 0; x < feed.length; x++){
+        if(feed[x].profile_pic){
+          const url = await UserService.getProfilePic(feed[x].profile_pic)
+          updatedFeed[x].profile_pic = url;
+        }
+      }
+      return updatedFeed
+    }catch(error){
+      console.log("Error getting feed profile pics:", error)
     }
   }
 }

@@ -1,6 +1,7 @@
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
 import { Response } from 'express';
 import NotiService from '../services/NotiService';
+import UserService from '../services/UserService';
 
 class NotificationController {
   async createInteractionNoti(user: any, notiType: string, postId: number): Promise<void> {
@@ -36,7 +37,17 @@ class NotificationController {
   async getNotifications(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const currentUser = req.user;
-      const notis = await NotiService.getNotis(currentUser);
+      const userId = currentUser?.id
+  
+      let notis = await NotiService.getNotis(currentUser);
+
+      const profile = await UserService.getUserById(userId)
+      if(profile !== undefined){
+        for(let x = 0; x < notis.length; x++){
+          notis[x].post.profile_pic = profile[0].profile_pic
+        }
+      }
+
       res.status(200).json(notis);
     } catch (error) {
       res.status(500).json(error);

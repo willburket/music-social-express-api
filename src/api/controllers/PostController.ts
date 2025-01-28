@@ -5,6 +5,7 @@ import CreatePost from '../interfaces/CreatePost';
 import BetService from '../services/BetService';
 import FeedHelper from '../helpers/FeedHelper';
 import NotificationController from './NotificationController';
+import UserService from '../services/UserService';
 
 class PostController {
   async createPost(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -59,7 +60,17 @@ class PostController {
 
     try {
       const posts = await PostService.getPostsByUsername(username, pageNum);
-      const fullPosts = await FeedHelper.checkLikeStatuses(user!.id, posts);
+      let fullPosts = await FeedHelper.checkLikeStatuses(user!.id, posts);
+      // get profile pic name from dB then file from S3 if not null 
+      const profile = await UserService.getUser(username)
+      if(profile !== undefined){
+            for(let x = 0; x < fullPosts.length; x++){
+              fullPosts[x].profile_pic = profile[0].profile_pic
+            }
+      }
+        // attach to each post object in fullPosts 
+
+
 
       res.status(200).json(fullPosts);
     } catch (error) {

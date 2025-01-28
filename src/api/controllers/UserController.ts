@@ -3,7 +3,6 @@ import UserService from '../services/UserService';
 import AuthUser from '../interfaces/AuthUser';
 import SignUpUser from '../interfaces/SignUpUser';
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
-import { stat } from 'fs';
 import NotificationController from './NotificationController';
 
 class UserController {

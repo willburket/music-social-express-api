@@ -1,6 +1,5 @@
 import { Response } from 'express';
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
-import FeedService from '../services/FeedService';
 import BetService from '../services/BetService';
 
 class BetController {

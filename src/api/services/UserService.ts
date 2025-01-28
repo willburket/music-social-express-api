@@ -7,20 +7,58 @@ import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import FeedHelper from '../helpers/FeedHelper';
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
+
+import "@aws-sdk/signature-v4-crt";
+import "@aws-sdk/crc64-nvme-crt";
 
 dotenv.config();
+
+const client = new S3Client({ region: process.env.AWS_REGION, 
+  credentials:{
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+}
+})
 
 class UserService {
   static async getUser(username: string) {
     try {
-      const res = await db(process.env.USER_TABLE as string)
-        .select('id', 'username', 'first_name', 'last_name', 'following_count', 'follower_count', 'bio', 'winnings')
+      let res = await db(process.env.USER_TABLE as string)
+        .select('id', 'username', 'first_name', 'last_name', 'following_count', 'follower_count', 'bio', 'winnings','profile_pic')
         .where('username', username);
+
+      if(res[0].profile_pic !== null){
+        res[0].profile_pic = await UserService.getProfilePic(res[0].profile_pic)
+      }
+
+      // get profile pic using profile_pic
       return res;
     } catch (error) {
       console.log('Error fetching user:', error);
     }
   }
+
+  static async getUserById(id: any){
+    try{
+      let res = await db(process.env.USER_TABLE as string)
+        .select('id', 'username', 'first_name', 'last_name', 'following_count', 'follower_count', 'bio', 'winnings','profile_pic')
+        .where('id', id);
+
+      if(res[0].profile_pic !== null){
+        res[0].profile_pic = await UserService.getProfilePic(res[0].profile_pic)
+      }
+
+      // get profile pic using profile_pic
+      return res;
+    }catch(error){
+      console.log("Error getting user by Id: ", error)
+    }
+
+  }
+
+
 
   static async authorizeUser(user: AuthUser) {
     try {
@@ -128,11 +166,18 @@ class UserService {
         .select('follower_id')
         .where({ followee_id: userId });
       const followerIds = followers.map((obj) => obj.follower_id);
-      const followerObjects = await db(process.env.USER_TABLE as string)
-        .select('id', 'first_name', 'last_name', 'bio', 'username')
+      let followerObjects = await db(process.env.USER_TABLE as string)
+        .select('id', 'first_name', 'last_name', 'bio', 'username', 'profile_pic')
         .whereIn('id', followerIds)
         .limit(itemCount)
         .offset(offset);
+
+        for(let x = 0; x < followerObjects.length; x++){
+          if(followerObjects[x].profile_pic){
+            const url = await UserService.getProfilePic(followerObjects[x].profile_pic)
+            followerObjects[x].profile_pic = url;
+          }
+        }
 
       return followerObjects;
     } catch (error) {
@@ -149,11 +194,19 @@ class UserService {
         .select('followee_id')
         .where({ follower_id: userId });
       const followingIds = following.map((obj) => obj.followee_id);
-      const followingObjects = await db(process.env.USER_TABLE as string)
-        .select('id', 'first_name', 'last_name', 'bio', 'username')
+      let followingObjects = await db(process.env.USER_TABLE as string)
+        .select('id', 'first_name', 'last_name', 'bio', 'username', 'profile_pic')
         .whereIn('id', followingIds)
         .limit(itemCount)
         .offset(offset);
+
+        for(let x = 0; x < followingObjects.length; x++){
+          if(followingObjects[x].profile_pic){
+            const url = await UserService.getProfilePic(followingObjects[x].profile_pic)
+            followingObjects[x].profile_pic = url;
+          }
+        }
+
 
       return followingObjects;
     } catch (error) {
@@ -167,7 +220,15 @@ class UserService {
 
   static async getLikedPosts(userId: number, page: number) {
     try {
-      const likedPosts = await FeedHelper.getLikedPosts(userId, page);
+      let likedPosts = await FeedHelper.getLikedPosts(userId, page);
+
+      for(let x = 0; x < likedPosts.length; x++){
+        if(likedPosts[x].profile_pic){
+          const url = await UserService.getProfilePic(likedPosts[x].profile_pic)
+          likedPosts[x].profile_pic = url;
+        }
+      }
+      
       return likedPosts;
     } catch (error) {
       throw error;
@@ -176,7 +237,14 @@ class UserService {
 
   static async getDislikedPosts(userId: number, page: number) {
     try {
-      const dislikedPosts = await FeedHelper.getDislikedPosts(userId, page);
+      let dislikedPosts = await FeedHelper.getDislikedPosts(userId, page);
+
+      for(let x = 0; x < dislikedPosts.length; x++){
+        if(dislikedPosts[x].profile_pic){
+          const url = await UserService.getProfilePic(dislikedPosts[x].profile_pic)
+          dislikedPosts[x].profile_pic = url;
+        }
+      }
       return dislikedPosts;
     } catch (error) {
       throw error;
@@ -198,9 +266,19 @@ class UserService {
     }
   }
 
-  static async getProfilePic(userId: number){
+  static async getProfilePic(photoName: string){
     try{
+        // should typically be called within other function while we're fetching feed/user data
+        // needs to get photo id or whatever from user database
+          // then fetch said id in S3 bucket 
+        // we want to deliver everything to the front end ready to go probably 
 
+        // signed url 
+        // const command = new PutObjectCommand({Bucket: process.env.AWS_S3_BUCKET,Key: photoName, ACL: 'public-read', ContentType: "image/jpeg"});
+        const command = new GetObjectCommand({Bucket: process.env.AWS_S3_BUCKET, Key: photoName});
+        const signedUrl = await getSignedUrl(client, command, { expiresIn: 3000 });
+
+      return signedUrl
     }catch(error){
       console.log("Error getting profile pic: ", error)
       throw error;

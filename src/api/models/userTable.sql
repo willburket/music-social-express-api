@@ -3,7 +3,7 @@ USE Users;
 SELECT * FROM Users;
 
 DELETE FROM Users
-WHERE id >= 54;
+WHERE id >= 58;
 
 UPDATE Users
 SET winnings = 0
@@ -14,7 +14,7 @@ ALTER TABLE Users
 ADD COLUMN winnings INT;
 
 ALTER TABLE Users
-MODIFY COLUMN winnings DECIMAL(10, 2);
+MODIFY COLUMN winnings DECIMAL(10, 2) DEFAULT 0.00;
 
 
 UPDATE Users
