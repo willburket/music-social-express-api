@@ -4,6 +4,23 @@ import AuthUser from '../interfaces/AuthUser';
 import SignUpUser from '../interfaces/SignUpUser';
 import AuthenticatedRequest from '../interfaces/AuthenticatedRequest';
 import NotificationController from './NotificationController';
+import multer from 'multer';
+
+type MulterFile = Express.Multer.File & {
+  buffer: Buffer;
+};
+
+interface MulterRequest extends AuthenticatedRequest {
+  file?: MulterFile;
+}
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 class UserController {
   async getUser(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -139,26 +156,33 @@ class UserController {
   async editProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
     const id = req.params.id;
     const idNum: number = parseInt(id, 10);
-    const newData = req.body;
     const user = req.user?.id;
-    let token;
+    let token: any;
 
-    const userObj = {
-      first_name: newData.firstName,
-      last_name: newData.lastName,
-      username: newData.username,
-      bio: newData.bio,
-    };
-
-    try {
-      if (user) {
-        token = await UserService.editProfile(user, userObj);
+    // Handle the multipart form data
+    upload.single('profile_pic')(req, res, async (err: any) => {
+      if (err) {
+        return res.status(400).json({ error: 'File upload error' });
       }
 
-      res.status(200).json(token);
-    } catch (error) {
-      res.status(500).json(error);
-    }
+      const userObj = {
+        first_name: req.body.firstName,
+        last_name: req.body.lastName,
+        username: req.body.username,
+        bio: req.body.bio,
+        profile_pic: req.file ? (req.file as MulterFile).buffer : req.body.profile_pic,
+      };
+
+      console.log("userObj: ", userObj)
+      try {
+        if (user) {
+          token = await UserService.editProfile(user, userObj);
+        }
+        res.status(200).json(token);
+      } catch (error) {
+        res.status(500).json(error);
+      }
+    });
   }
 }
 

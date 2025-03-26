@@ -6,6 +6,7 @@ import { authenticateJWT } from '../middlewares/Authenticate';
 import BetController from '../controllers/BetController';
 import LeaderboardController from '../controllers/LeaderboardController';
 import NotificationController from '../controllers/NotificationController';
+import upload from '../../config/multer';
 
 const router: Router = express.Router();
 router.use(express.json());
@@ -18,7 +19,15 @@ router.get('/followers/:id', authenticateJWT, UserController.getFollowers);
 router.get('/following/:id', authenticateJWT, UserController.getFollowing);
 router.get('/likes/:id', authenticateJWT, UserController.getLikedPosts);
 router.get('/dislikes/:id', authenticateJWT, UserController.getDislikedPosts);
+// router.post('/profile/:id', authenticateJWT, UserController.editProfile);
+// router.post('/profile/:id', upload.single("file"), (req: any, res: any) => {
+//     console.log("body: ", req.body)
+//     console.log("file: ", req.file)
+// });
+// router.post('/profile/:id', upload.single("profile_pic"), UserController.editProfile);d
 router.post('/profile/:id', authenticateJWT, UserController.editProfile);
+
+
 
 // follow
 router.post('/follow/:id', authenticateJWT, UserController.followUser);

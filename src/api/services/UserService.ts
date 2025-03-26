@@ -253,9 +253,46 @@ class UserService {
 
   static async editProfile(userId: number, newData: any) {
     try {
-      await db(process.env.USER_TABLE as string)
+    
+      let db_data;
+
+      if(newData.profile_pic !== null){
+        db_data = {
+          first_name: newData.firstName,
+          last_name: newData.lastName,
+          username: newData.username,
+          bio: newData.bio,
+          profile_pic: newData.profile_pic.name,
+        }
+        // if profile pic is in newData 
+          // get old profile pic file name 
+          const res = await db(process.env.USER_TABLE as string)
+          .where({ id: userId })
+          .select('profile_pic');
+          const oldPicName = res[0];
+
+          // update profile pic file name 
+          await db(process.env.USER_TABLE as string)
+          .where({ id: userId })
+          .update(db_data);
+          // upload file to s3
+          await UserService.uploadS3File(db_data.profile_pic)
+          // delete old file from s3
+          await UserService.deleteS3File(oldPicName)
+  
+      }else{
+        db_data = {
+          first_name: newData.firstName,
+          last_name: newData.lastName,
+          username: newData.username,
+          bio: newData.bio,
+        }
+
+        // if profile pic is not in newData 
+        await db(process.env.USER_TABLE as string)
         .where({ id: userId })
-        .update(newData);
+        .update(db_data);
+      }
 
       const payload = { id: userId, username: newData.username };
       const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
@@ -282,6 +319,25 @@ class UserService {
     }catch(error){
       console.log("Error getting profile pic: ", error)
       throw error;
+    }
+  }
+
+  static async deleteS3File(fileName: string){
+    try{
+
+    }catch(error){
+      console.log("Error deleting S3 file: ", error)
+      throw error
+    }
+  }
+
+  static async uploadS3File(file: File){
+    try{
+      // const command = new GetObjectCommand({Bucket: process.env.AWS_S3_BUCKET, Key: photoName});
+
+
+    }catch(error){  
+      console.log("Error uploading S3 file: ", error);
     }
   }
 
