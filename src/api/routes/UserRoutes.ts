@@ -19,13 +19,9 @@ router.get('/followers/:id', authenticateJWT, UserController.getFollowers);
 router.get('/following/:id', authenticateJWT, UserController.getFollowing);
 router.get('/likes/:id', authenticateJWT, UserController.getLikedPosts);
 router.get('/dislikes/:id', authenticateJWT, UserController.getDislikedPosts);
+router.post('/profile/:id', authenticateJWT, upload.single("profile_pic"), UserController.editProfile);
 // router.post('/profile/:id', authenticateJWT, UserController.editProfile);
-// router.post('/profile/:id', upload.single("file"), (req: any, res: any) => {
-//     console.log("body: ", req.body)
-//     console.log("file: ", req.file)
-// });
-// router.post('/profile/:id', upload.single("profile_pic"), UserController.editProfile);d
-router.post('/profile/:id', authenticateJWT, UserController.editProfile);
+
 
 
 

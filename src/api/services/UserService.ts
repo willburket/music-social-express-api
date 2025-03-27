@@ -7,7 +7,7 @@ import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import FeedHelper from '../helpers/FeedHelper';
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
 
 import "@aws-sdk/signature-v4-crt";
@@ -253,52 +253,48 @@ class UserService {
 
   static async editProfile(userId: number, newData: any) {
     try {
-    
-      let db_data;
+      // Get current user data to check for existing profile picture
+      const currentUser = await db(process.env.USER_TABLE as string)
+        .select('profile_pic')
+        .where('id', userId);
+      
+      const oldPicName = currentUser[0].profile_pic;
+      let profilePicName = oldPicName;
 
-      if(newData.profile_pic !== null){
-        db_data = {
-          first_name: newData.firstName,
-          last_name: newData.lastName,
-          username: newData.username,
-          bio: newData.bio,
-          profile_pic: newData.profile_pic.name,
+      // If there's a new file, upload it to S3
+      if (newData.profile_pic && newData.profile_pic.buffer) {
+        profilePicName = await UserService.uploadS3File(newData.profile_pic);
+        
+        // If there was an old picture, delete it from S3
+        if (oldPicName) {
+          await UserService.deleteS3File(oldPicName);
         }
-        // if profile pic is in newData 
-          // get old profile pic file name 
-          const res = await db(process.env.USER_TABLE as string)
-          .where({ id: userId })
-          .select('profile_pic');
-          const oldPicName = res[0];
-
-          // update profile pic file name 
-          await db(process.env.USER_TABLE as string)
-          .where({ id: userId })
-          .update(db_data);
-          // upload file to s3
-          await UserService.uploadS3File(db_data.profile_pic)
-          // delete old file from s3
-          await UserService.deleteS3File(oldPicName)
-  
-      }else{
-        db_data = {
-          first_name: newData.firstName,
-          last_name: newData.lastName,
-          username: newData.username,
-          bio: newData.bio,
-        }
-
-        // if profile pic is not in newData 
-        await db(process.env.USER_TABLE as string)
-        .where({ id: userId })
-        .update(db_data);
       }
 
-      const payload = { id: userId, username: newData.username };
+      // Update user data in database
+      const db_data = {
+        first_name: newData.first_name,
+        last_name: newData.last_name,
+        username: newData.username,
+        bio: newData.bio,
+        profile_pic: profilePicName
+      };
+
+      await db(process.env.USER_TABLE as string)
+        .where('id', userId)
+        .update(db_data);
+
+      // Generate new token
+      const user = await db(process.env.USER_TABLE as string)
+        .select('id', 'username')
+        .where('id', userId);
+      
+      const payload = { id: user[0].id, username: user[0].username };
       const token = jwt.sign(payload as CurrentUser, process.env.SECRET_KEY as string, { expiresIn: '1h' });
+      
       return token;
     } catch (error) {
-      console.log('edit prof:', error);
+      console.log("Error editing profile: ", error);
       throw error;
     }
   }
@@ -322,22 +318,35 @@ class UserService {
     }
   }
 
-  static async deleteS3File(fileName: string){
-    try{
+  static async deleteS3File(fileName: string) {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET as string,
+        Key: fileName
+      });
 
-    }catch(error){
-      console.log("Error deleting S3 file: ", error)
-      throw error
+      await client.send(command);
+    } catch (error) {
+      console.log("Error deleting S3 file: ", error);
+      throw error;
     }
   }
 
-  static async uploadS3File(file: File){
-    try{
-      // const command = new GetObjectCommand({Bucket: process.env.AWS_S3_BUCKET, Key: photoName});
+  static async uploadS3File(file: any) {
+    try {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const command = new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET as string,
+        Key: fileName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      });
 
-
-    }catch(error){  
+      await client.send(command);
+      return fileName;
+    } catch (error) {
       console.log("Error uploading S3 file: ", error);
+      throw error;
     }
   }
 
