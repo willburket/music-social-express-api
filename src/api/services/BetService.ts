@@ -272,50 +272,73 @@ class BetService {
   }
 
   static async scheduleCheck(eventId: number, dBevent: any) {
-    let checkTime;
     const initialDate = new Date(dBevent.start_time);
+    let checkTime = new Date(initialDate.getTime() + 2 * 60 * 60 * 1000); // Default to 2 hours
 
     switch (dBevent.league) {
       case 'basketball_nba':
         // 2.25 h
         checkTime = new Date(initialDate.getTime() + 2.25 * 60 * 60 * 1000);
+        break;
       case 'baseball_mlb':
         // 2.75 h
         checkTime = new Date(initialDate.getTime() + 2.75 * 60 * 60 * 1000);
+        break;
       case 'americanfootball_nfl':
         // 3.25 h
         checkTime = new Date(initialDate.getTime() + 3.25 * 60 * 60 * 1000);
+        break;
       case 'icehockey_nhl':
         // 2.5 h
         checkTime = new Date(initialDate.getTime() + 2.5 * 60 * 60 * 1000);
+        break;
       case 'soccer_epl':
         // 2 h
         checkTime = new Date(initialDate.getTime() + 2 * 60 * 60 * 1000);
+        break;
     }
 
     try {
       // schedule getOutcome duration of hours after game starts
-      const gameOutcome = await schedule.scheduleJob(checkTime, () => BetService.getOutcome(dBevent, eventId));
-
-      if (!gameOutcome) {
-        // if games not finished check again in 15 min
-        await BetService.rescheduleCheck(eventId, dBevent);
+      const job = schedule.scheduleJob(checkTime, async () => {
+        const outcome = await BetService.getOutcome(dBevent, eventId);
+        console.log("Game outcome: ", outcome);
+        if (outcome === false) {
+          // if games not finished check again in 15 min
+          await BetService.rescheduleCheck(eventId, dBevent);
+        }
+      });
+      
+      if (!job) {
+        throw new Error('Failed to schedule job');
       }
     } catch (error) {
-      console.log('Error scheduling check:', error);
+      console.log("Error scheduling check: ", error);
+      throw error;
     }
   }
 
   static async rescheduleCheck(eventId: number, dBevent: any) {
-    const fifteenMinutes = new Date(Date.now() + 15 * 60 * 1000);
-    const gameOutcome = await schedule.scheduleJob(fifteenMinutes, () => BetService.getOutcome(dBevent, eventId));
-    console.log("Rescheduling check")
+    try {
+      const fifteenMinutes = new Date(Date.now() + 15 * 60 * 1000);
+      const job = schedule.scheduleJob(fifteenMinutes, async () => {
+        const outcome = await BetService.getOutcome(dBevent, eventId);
+        console.log("Rescheduled check outcome: ", outcome);
+        if (outcome === false) {
+          // If game still not complete, reschedule again
+          await BetService.rescheduleCheck(eventId, dBevent);
+        }
+      });
 
-    if (!gameOutcome) {
-      await BetService.rescheduleCheck(eventId, dBevent);
-      console.log('Rescheduling check for 15 minutes');
+      if (!job) {
+        throw new Error('Failed to schedule rescheduled check');
+      }
+      
+      console.log('Rescheduling check for 15 minutes from now');
+    } catch (error) {
+      console.log("Error rescheduling check: ", error);
+      throw error;
     }
-    return;
   }
 
   static async populateBetOutcomes(eventId: number, score: any) {
